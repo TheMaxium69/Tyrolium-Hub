@@ -1,0 +1,96 @@
+/* ─── Hub global overrides ──────────────────────────────── */
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* ─── Design tokens (light) ────────────────────────────── */
+:root {
+  --dash-bg:        #ebecf0;
+  --dash-card-bg:   #ebecf0;
+  --dash-shadow-l:  #ffffff;
+  --dash-shadow-d:  #BABECC;
+  --dash-text:      #212529;
+  --dash-text-2:    #5a5f6e;
+  --dash-text-muted:#9ca3af;
+  --dash-border:    #d6d8e0;
+  --dash-accent:    #0533c8;
+  --dash-accent-2:  #1d4ed8;
+  --dash-green:     #22c55e;
+  --dash-orange:    #f59e0b;
+  --dash-red:       #ef4444;
+
+  --shadow-card:    -5px -5px 20px var(--dash-shadow-l), 5px 5px 20px var(--dash-shadow-d);
+  --shadow-card-sm: -3px -3px 10px var(--dash-shadow-l), 3px 3px 10px var(--dash-shadow-d);
+  --shadow-card-hover: -2px -2px 5px var(--dash-shadow-l), 2px 2px 5px var(--dash-shadow-d);
+  --shadow-inset:   inset -2px -2px 6px var(--dash-shadow-l), inset 2px 2px 6px var(--dash-shadow-d);
+}
+
+[data-theme="dark"] {
+  --dash-bg:        #0f1117;
+  --dash-card-bg:   #1a1f2e;
+  --dash-shadow-l:  rgba(255,255,255,0.03);
+  --dash-shadow-d:  rgba(0,0,0,0.4);
+  --dash-text:      #f3f4f6;
+  --dash-text-2:    #9ca3af;
+  --dash-text-muted:#6b7280;
+  --dash-border:    #374151;
+
+  --shadow-card:    0 2px 12px rgba(0,0,0,0.4);
+  --shadow-card-sm: 0 1px 6px rgba(0,0,0,0.35);
+  --shadow-card-hover: 0 4px 20px rgba(0,0,0,0.5);
+  --shadow-inset:   inset 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* ─── Shared card ───────────────────────────────────────── */
+
+.dash-card {
+  background: var(--dash-card-bg);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease;
+}
+
+.dash-card:hover { box-shadow: var(--shadow-card-hover); }
+
+.dash-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dash-accent);
+  margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .dash-title { color: #60a5fa; }
+
+.dash-section-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--dash-text);
+  margin-bottom: 1rem;
+  margin-top: 2rem;
+}
+
+.dash-section-title:first-child { margin-top: 0; }
+
+/* ─── Scrollable content ────────────────────────────────── */
+
+.dash-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--dash-border) transparent;
+}
+
+.dash-scroll::-webkit-scrollbar { width: 5px; }
+.dash-scroll::-webkit-scrollbar-track { background: transparent; }
+.dash-scroll::-webkit-scrollbar-thumb {
+  background: var(--dash-border);
+  border-radius: 10px;
+}

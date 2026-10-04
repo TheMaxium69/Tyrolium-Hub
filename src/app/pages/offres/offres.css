@@ -1,0 +1,86 @@
+.of-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.of-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.of-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--dash-text);
+  line-height: 1.1;
+}
+
+.of-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.of-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.of-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.of-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.of-option-label {
+  font-size: 0.85rem;
+  color: var(--dash-text-2);
+}
+
+.of-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.of-name {
+  display: block;
+  color: var(--dash-text);
+}
+
+.of-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--dash-text-2);
+}
+
+.of-desc {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  color: var(--dash-text-muted);
+}
+
+.of-row-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.of-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--dash-text-muted);
+}

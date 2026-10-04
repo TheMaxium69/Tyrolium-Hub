@@ -1,0 +1,172 @@
+<tyro-ui-page-header label="Tyrolium" [title]="lang() === 'en' ? 'Offers' : 'Offres'">
+  {{ lang() === 'en'
+    ? 'Catalogue of the offers that can be sold to clients as services.'
+    : 'Catalogue des offres pouvant être vendues aux clients sous forme de prestations.' }}
+</tyro-ui-page-header>
+
+<div class="of-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert
+      type="danger"
+      [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load offers from Tyrolium API.' : 'Impossible de charger les offres depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  <div class="of-stats">
+    <tyro-ui-bento-card size="small" icon="ri-price-tag-3-line" [label]="lang() === 'en' ? 'Offers' : 'Offres'">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="of-value">{{ counts().total }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-checkbox-circle-line" [label]="lang() === 'en' ? 'Active' : 'Actives'">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="of-value">{{ counts().active }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-store-2-line" [label]="lang() === 'en' ? 'Listed in the catalogue' : 'Au catalogue'">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="of-value">{{ counts().listed }}</span> }
+    </tyro-ui-bento-card>
+  </div>
+
+  <!-- ── Formulaire ─────────────────────────────────────── -->
+  @if (formId() !== null) {
+    <tyro-ui-bento-card
+      [icon]="formId() === 0 ? 'ri-add-line' : 'ri-pencil-line'"
+      [label]="lang() === 'en' ? 'Catalogue' : 'Catalogue'"
+      [title]="formId() === 0 ? (lang() === 'en' ? 'New offer' : 'Nouvelle offre') : (lang() === 'en' ? 'Edit offer' : 'Modifier l\'offre')">
+      <form class="of-form" (submit)="save($event)">
+        <div class="of-fields">
+          <tyro-ui-text-field
+            [label]="lang() === 'en' ? 'Name' : 'Nom'"
+            placeholder="Prestation Web Premium"
+            [value]="form.displayName"
+            [disabled]="saving()"
+            (valueChange)="form.displayName = $event">
+          </tyro-ui-text-field>
+          <tyro-ui-text-field
+            [label]="lang() === 'en' ? 'Tag (unique)' : 'Tag (unique)'"
+            placeholder="web_premium_1"
+            [value]="form.tagName"
+            [disabled]="saving()"
+            (valueChange)="form.tagName = $event">
+          </tyro-ui-text-field>
+          <tyro-ui-text-field
+            [label]="lang() === 'en' ? 'Price excl. VAT (€, optional)' : 'Prix HT (€, facultatif)'"
+            placeholder="1490,00"
+            [value]="form.price"
+            [disabled]="saving()"
+            (valueChange)="form.price = $event">
+          </tyro-ui-text-field>
+        </div>
+
+        <tyro-ui-text-field
+          [label]="lang() === 'en' ? 'Description (optional)' : 'Description (facultative)'"
+          [value]="form.description"
+          [disabled]="saving()"
+          (valueChange)="form.description = $event">
+        </tyro-ui-text-field>
+
+        <div class="of-options">
+          <div class="of-option">
+            <span class="of-option-label">{{ lang() === 'en' ? 'Visibility' : 'Visibilité' }}</span>
+            <tyro-ui-button-group
+              size="sm"
+              [items]="visibilityItems()"
+              [value]="form.visibility"
+              (valueChange)="form.visibility = $any($event)">
+            </tyro-ui-button-group>
+          </div>
+          <tyro-ui-switch
+            [label]="lang() === 'en' ? 'Active offer' : 'Offre active'"
+            [value]="form.isActive"
+            [disabled]="saving()"
+            (valueChange)="form.isActive = $event">
+          </tyro-ui-switch>
+        </div>
+
+        @if (formError(); as error) {
+          <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+        }
+
+        <div class="of-actions">
+          <tyro-ui-button variant="ghost" [disabled]="saving()" (clicked)="closeForm()">
+            {{ lang() === 'en' ? 'Cancel' : 'Annuler' }}
+          </tyro-ui-button>
+          <tyro-ui-button type="submit" variant="gradient" icon="ri-check-line" [disabled]="saving()">
+            {{ saving()
+              ? (lang() === 'en' ? 'Saving…' : 'Enregistrement…')
+              : (formId() === 0 ? (lang() === 'en' ? 'Create offer' : 'Créer l\'offre') : (lang() === 'en' ? 'Save' : 'Enregistrer')) }}
+          </tyro-ui-button>
+        </div>
+      </form>
+    </tyro-ui-bento-card>
+  }
+
+  <!-- ── Catalogue ──────────────────────────────────────── -->
+  <tyro-ui-bento-card icon="ri-price-tag-3-line" label="Tyrolium" [title]="lang() === 'en' ? 'Catalogue' : 'Catalogue'">
+
+    @if (service.canOffre('create') && formId() === null) {
+      <div tyro-header-action>
+        <tyro-ui-button size="sm" icon="ri-add-line" (clicked)="openCreate()">
+          {{ lang() === 'en' ? 'New offer' : 'Nouvelle offre' }}
+        </tyro-ui-button>
+      </div>
+    }
+
+    @if (loading()) {
+      <tyro-ui-skeleton height="44px" [count]="4"></tyro-ui-skeleton>
+    } @else if (!rows().length) {
+      <p class="of-empty">{{ lang() === 'en' ? 'No offer yet.' : 'Aucune offre pour l\'instant.' }}</p>
+    } @else {
+      <tyro-ui-data-table [columns]="columns" [data]="rows()" [searchable]="true" [paginated]="true" [pageSize]="15">
+
+        <ng-template tyroCol="displayName" let-row>
+          <strong class="of-name">{{ $any(row).displayName }}</strong>
+          <code class="of-code">{{ $any(row).tagName }}</code>
+          @if ($any(row).description) {
+            <span class="of-desc">{{ $any(row).description }}</span>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="visibility" let-row>
+          @if ($any(row).visibility === 'listed') {
+            <tyro-ui-chip size="sm" variant="accent" icon="ri-store-2-line">{{ lang() === 'en' ? 'Listed' : 'Catalogue' }}</tyro-ui-chip>
+          } @else {
+            <tyro-ui-chip size="sm" icon="ri-magic-line">{{ lang() === 'en' ? 'Custom' : 'Sur mesure' }}</tyro-ui-chip>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="price" let-row>
+          <strong>{{ price($any(row).offre.price) }}</strong>
+        </ng-template>
+
+        <ng-template tyroCol="isActive" let-row>
+          @if ($any(row).offre.isActive) {
+            <tyro-ui-chip size="sm" variant="success" icon="ri-checkbox-circle-line">{{ lang() === 'en' ? 'Active' : 'Active' }}</tyro-ui-chip>
+          } @else {
+            <tyro-ui-chip size="sm" icon="ri-eye-off-line">{{ lang() === 'en' ? 'Disabled' : 'Désactivée' }}</tyro-ui-chip>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="createdAt" let-row>
+          {{ date($any(row).createdAt) }}
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <span class="of-row-actions">
+            @if (service.canOffre('update')) {
+              <tyro-ui-button size="sm" variant="ghost" icon="ri-pencil-line" (clicked)="openEdit($any(row).offre)"></tyro-ui-button>
+            }
+            @if (service.canOffre('delete')) {
+              <tyro-ui-button size="sm" variant="ghost" icon="ri-delete-bin-line" (clicked)="remove($any(row).offre)"></tyro-ui-button>
+            }
+          </span>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+</div>

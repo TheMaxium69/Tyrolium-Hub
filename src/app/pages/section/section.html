@@ -1,0 +1,21 @@
+<tyro-ui-page-header [label]="section.role" [title]="lang() === 'en' ? section.labelEn : section.label"></tyro-ui-page-header>
+
+@if (section.ready) {
+  <tyro-ui-alert
+    type="info"
+    [closable]="false"
+    [title]="lang() === 'en' ? 'Under construction' : 'En construction'"
+    [message]="lang() === 'en'
+      ? 'The API routes are ready, this page will be built soon.'
+      : 'Les routes API sont prêtes, cette page arrive bientôt.'">
+  </tyro-ui-alert>
+} @else {
+  <tyro-ui-alert
+    type="warning"
+    [closable]="false"
+    [title]="lang() === 'en' ? 'Coming soon' : 'Bientôt disponible'"
+    [message]="lang() === 'en'
+      ? 'The permission exists but tyrolium-api does not expose the routes for this domain yet.'
+      : 'La permission existe mais tyrolium-api n\'expose pas encore les routes de ce domaine.'">
+  </tyro-ui-alert>
+}

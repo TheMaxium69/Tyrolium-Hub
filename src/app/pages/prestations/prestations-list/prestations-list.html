@@ -1,0 +1,84 @@
+<tyro-ui-page-header label="Tyrolium" title="Prestations">
+  {{ lang() === 'en'
+    ? 'Offers sold to clients, with their status and progress.'
+    : 'Offres vendues aux clients, avec leur statut et leur avancement.' }}
+</tyro-ui-page-header>
+
+<div class="pl-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert
+      type="danger"
+      [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load services from Tyrolium API.' : 'Impossible de charger les prestations depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  <div class="pl-stats">
+    <tyro-ui-bento-card size="small" icon="ri-briefcase-4-line" label="Prestations">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="pl-value">{{ counts().total }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-play-circle-line" [label]="lang() === 'en' ? 'Active' : 'Actives'">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="pl-value">{{ counts().active }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-time-line" [label]="lang() === 'en' ? 'Pending' : 'En attente'">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="pl-value">{{ counts().pending }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-money-euro-circle-line" [label]="lang() === 'en' ? 'Active services value' : 'Valeur des prestations actives'">
+      @if (loading()) { <tyro-ui-skeleton width="120px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="pl-value pl-value--sm">{{ price(counts().revenue) }}</span> }
+    </tyro-ui-bento-card>
+  </div>
+
+  <tyro-ui-bento-card icon="ri-briefcase-4-line" label="Tyrolium" [title]="lang() === 'en' ? 'Services' : 'Prestations'">
+
+    @if (service.canPrestation('create')) {
+      <div tyro-header-action>
+        <tyro-ui-button size="sm" icon="ri-add-line" (clicked)="open('nouvelle')">
+          {{ lang() === 'en' ? 'New service' : 'Nouvelle prestation' }}
+        </tyro-ui-button>
+      </div>
+    }
+
+    @if (loading()) {
+      <tyro-ui-skeleton height="44px" [count]="5"></tyro-ui-skeleton>
+    } @else if (!rows().length) {
+      <p class="pl-empty">{{ lang() === 'en' ? 'No service yet.' : 'Aucune prestation pour l\'instant.' }}</p>
+    } @else {
+      <tyro-ui-data-table [columns]="columns" [data]="rows()" [searchable]="true" [filterable]="true" [paginated]="true" [pageSize]="15">
+
+        <ng-template tyroCol="client" let-row>
+          <app-prestation-client [prestation]="$any(row).prestation"></app-prestation-client>
+        </ng-template>
+
+        <ng-template tyroCol="status" let-row>
+          <app-prestation-status [status]="$any(row).status"></app-prestation-status>
+        </ng-template>
+
+        <ng-template tyroCol="progress" let-row>
+          <tyro-ui-progress-bar [value]="$any(row).prestation.progress" [showLabel]="true" height="6px"></tyro-ui-progress-bar>
+        </ng-template>
+
+        <ng-template tyroCol="price" let-row>
+          <strong>{{ price($any(row).prestation.price) }}</strong>
+        </ng-template>
+
+        <ng-template tyroCol="startedAt" let-row>
+          {{ date($any(row).prestation.startedAt) }}
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <tyro-ui-button size="sm" variant="lite" iconRight="ri-arrow-right-line" (clicked)="open($any(row).id)">
+            {{ lang() === 'en' ? 'Open' : 'Voir' }}
+          </tyro-ui-button>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+</div>

@@ -1,0 +1,67 @@
+<tyro-ui-page-header label="Useritium" [title]="lang() === 'en' ? 'Users' : 'Utilisateurs'">
+  {{ lang() === 'en'
+    ? 'Administration of Useritium accounts: profile, e-mails, sessions and suspension.'
+    : 'Administration des comptes Useritium : profil, emails, sessions et suspension.' }}
+</tyro-ui-page-header>
+
+<div class="ul-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert
+      type="danger"
+      [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load users from Tyrolium API.' : 'Impossible de charger les utilisateurs depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  <div class="ul-stats">
+    <tyro-ui-bento-card size="small" icon="ri-group-line" [label]="lang() === 'en' ? 'Accounts' : 'Comptes'">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="ul-value">{{ counts().total }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-shield-user-line" [label]="lang() === 'en' ? 'Internal staff' : 'Personnel interne'">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="ul-value">{{ counts().interne }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-forbid-line" [label]="lang() === 'en' ? 'Suspended' : 'Suspendus'">
+      @if (loading()) { <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton> }
+      @else { <span class="ul-value">{{ counts().banned }}</span> }
+    </tyro-ui-bento-card>
+  </div>
+
+  <tyro-ui-bento-card icon="ri-group-line" label="Useritium" [title]="lang() === 'en' ? 'Accounts' : 'Comptes'">
+    @if (loading()) {
+      <tyro-ui-skeleton height="44px" [count]="5"></tyro-ui-skeleton>
+    } @else if (!rows().length) {
+      <p class="ul-empty">{{ lang() === 'en' ? 'No account.' : 'Aucun compte.' }}</p>
+    } @else {
+      <tyro-ui-data-table [columns]="columns" [data]="rows()" [searchable]="true" [filterable]="true" [paginated]="true" [pageSize]="20">
+
+        <ng-template tyroCol="username" let-row>
+          <app-hub-user [user]="$any(row).user"></app-hub-user>
+        </ng-template>
+
+        <ng-template tyroCol="email" let-row>
+          <span class="ul-muted">{{ $any(row).email || '-' }}</span>
+        </ng-template>
+
+        <ng-template tyroCol="accessLevel" let-row>
+          <app-access-level [level]="$any(row).level" [banned]="$any(row).banned"></app-access-level>
+        </ng-template>
+
+        <ng-template tyroCol="createdAt" let-row>
+          {{ date($any(row).createdAt) }}
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <tyro-ui-button size="sm" variant="lite" iconRight="ri-arrow-right-line" (clicked)="open($any(row).id)">
+            {{ lang() === 'en' ? 'Open' : 'Voir' }}
+          </tyro-ui-button>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+</div>

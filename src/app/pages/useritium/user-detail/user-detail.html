@@ -1,0 +1,272 @@
+<div class="ud-back">
+  <tyro-ui-button size="sm" variant="ghost" icon="ri-arrow-left-line" (clicked)="back()">
+    {{ lang() === 'en' ? 'Users' : 'Utilisateurs' }}
+  </tyro-ui-button>
+</div>
+
+@if (notFound()) {
+  <tyro-ui-alert
+    type="warning"
+    [closable]="false"
+    [title]="lang() === 'en' ? 'User not found' : 'Utilisateur introuvable'"
+    [message]="lang() === 'en' ? 'This account does not exist.' : 'Ce compte n\'existe pas.'">
+  </tyro-ui-alert>
+} @else if (loadError()) {
+  <tyro-ui-alert
+    type="danger"
+    [closable]="false"
+    [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+    [message]="lang() === 'en' ? 'Unable to load this account from Tyrolium API.' : 'Impossible de charger ce compte depuis l\'API Tyrolium.'">
+  </tyro-ui-alert>
+} @else if (loading() || !user()) {
+  <tyro-ui-skeleton width="320px" height="56px"></tyro-ui-skeleton>
+  <div class="ud-page">
+    <tyro-ui-skeleton height="180px" [count]="2"></tyro-ui-skeleton>
+  </div>
+} @else {
+  @let u = user()!;
+
+  <!-- ── En-tête ─────────────────────────────────────────── -->
+  <header class="ud-header">
+    <tyro-ui-avatar [src]="avatar()" [name]="name()" size="lg"></tyro-ui-avatar>
+    <div class="ud-header-text">
+      <span class="ud-label">Useritium #{{ u.id }} · &#64;{{ u.username }}</span>
+      <h1 class="ud-title">{{ name() }}</h1>
+      <app-access-level [level]="u.accessLevel" [banned]="!!u.bannedAt"></app-access-level>
+    </div>
+  </header>
+
+  <div class="ud-page">
+
+    @if (!editable()) {
+      <tyro-ui-alert
+        type="info"
+        [closable]="false"
+        [title]="lang() === 'en' ? 'Owner account' : 'Compte owner'"
+        [message]="lang() === 'en' ? 'An owner account cannot be modified, suspended or signed out from the Hub.' : 'Un compte owner ne peut pas être modifié, suspendu ni déconnecté depuis le Hub.'">
+      </tyro-ui-alert>
+    }
+
+    @if (u.bannedAt) {
+      <tyro-ui-alert
+        type="danger"
+        [closable]="false"
+        [title]="(lang() === 'en' ? 'Suspended on ' : 'Suspendu le ') + date(u.bannedAt)"
+        [message]="u.banReason || (lang() === 'en' ? 'No reason given.' : 'Aucun motif indiqué.')">
+      </tyro-ui-alert>
+    }
+
+    <div class="ud-grid">
+
+      <!-- ── Profil ────────────────────────────────────── -->
+      <tyro-ui-bento-card icon="ri-user-line" [label]="lang() === 'en' ? 'Account' : 'Compte'" [title]="lang() === 'en' ? 'Profile' : 'Profil'">
+
+        <span class="ud-field-label">{{ lang() === 'en' ? 'Profile picture' : 'Photo de profil' }}</span>
+        <div class="ud-row ud-row--spaced">
+          <span class="ud-pp">
+            <tyro-ui-avatar [src]="avatar()" [name]="name()" size="md"></tyro-ui-avatar>
+            <span class="ud-hint">{{ u.pp ? (lang() === 'en' ? 'Custom picture' : 'Photo personnalisée') : (lang() === 'en' ? 'Default avatar' : 'Avatar par défaut') }}</span>
+          </span>
+          @if (u.pp && editable() && admin.canUpdate()) {
+            <tyro-ui-button size="sm" variant="ghost" icon="ri-image-close-line" [disabled]="busy()" (clicked)="removePp()">
+              {{ lang() === 'en' ? 'Remove' : 'Retirer' }}
+            </tyro-ui-button>
+          }
+        </div>
+
+        <span class="ud-field-label">{{ lang() === 'en' ? 'Username' : 'Pseudo' }}</span>
+        @if (editingUsername()) {
+          <form class="ud-inline-form" (submit)="saveUsername($event)">
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'New username' : 'Nouveau pseudo'"
+              [value]="newUsername"
+              [disabled]="busy()"
+              (valueChange)="newUsername = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-button type="submit" icon="ri-check-line" [disabled]="busy() || !newUsername.trim() || newUsername.trim() === u.username">
+              {{ lang() === 'en' ? 'Save' : 'Enregistrer' }}
+            </tyro-ui-button>
+            <tyro-ui-button variant="ghost" icon="ri-close-line" [disabled]="busy()" (clicked)="editingUsername.set(false)"></tyro-ui-button>
+          </form>
+          <p class="ud-hint">
+            {{ lang() === 'en'
+              ? 'Changing the username invalidates the open sessions of this account.'
+              : 'Changer le pseudo invalide les sessions ouvertes de ce compte.' }}
+          </p>
+          @if (usernameError(); as error) {
+            <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+          }
+        } @else {
+          <div class="ud-row">
+            <strong class="ud-value">{{ u.username }}</strong>
+            @if (editable() && admin.canUpdate()) {
+              <tyro-ui-button size="sm" variant="lite" icon="ri-pencil-line" [disabled]="busy()" (clicked)="startEditUsername()">
+                {{ lang() === 'en' ? 'Edit' : 'Modifier' }}
+              </tyro-ui-button>
+            }
+          </div>
+        }
+
+        <span class="ud-field-label ud-field-label--spaced">{{ lang() === 'en' ? 'Display name' : 'Nom affiché' }}</span>
+        @if (editingDisplayName()) {
+          <form class="ud-inline-form" (submit)="saveDisplayName($event)">
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Display name (empty = username)' : 'Nom affiché (vide = pseudo)'"
+              [value]="newDisplayName"
+              [disabled]="busy()"
+              (valueChange)="newDisplayName = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-button type="submit" icon="ri-check-line" [disabled]="busy()">
+              {{ lang() === 'en' ? 'Save' : 'Enregistrer' }}
+            </tyro-ui-button>
+            <tyro-ui-button variant="ghost" icon="ri-close-line" [disabled]="busy()" (clicked)="editingDisplayName.set(false)"></tyro-ui-button>
+          </form>
+          @if (displayNameError(); as error) {
+            <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+          }
+        } @else {
+          <div class="ud-row">
+            @if (u.displayName) {
+              <strong class="ud-value">{{ u.displayName }}</strong>
+            } @else {
+              <span class="ud-hint">{{ lang() === 'en' ? 'None: the username is shown.' : 'Aucun : le pseudo est affiché.' }}</span>
+            }
+            @if (editable() && admin.canUpdate()) {
+              <tyro-ui-button size="sm" variant="lite" icon="ri-pencil-line" [disabled]="busy()" (clicked)="startEditDisplayName()">
+                {{ lang() === 'en' ? 'Edit' : 'Modifier' }}
+              </tyro-ui-button>
+            }
+          </div>
+        }
+
+        <dl class="ud-meta">
+          <dt>{{ lang() === 'en' ? 'Signed up' : 'Inscrit le' }}</dt>
+          <dd>{{ date(u.createdAt) }}</dd>
+          <dt>{{ lang() === 'en' ? 'Sessions valid since' : 'Sessions valides depuis' }}</dt>
+          <dd>{{ u.tokensValidSince ? date(u.tokensValidSince) : (lang() === 'en' ? 'Never revoked' : 'Jamais révoquées') }}</dd>
+        </dl>
+      </tyro-ui-bento-card>
+
+      <!-- ── Emails ────────────────────────────────────── -->
+      <tyro-ui-bento-card icon="ri-mail-line" [label]="u.emails.length + ' / 5'" title="Emails">
+        <ul class="ud-emails">
+          @for (email of u.emails; track email.id) {
+            <li class="ud-email">
+              <div class="ud-email-main">
+                <span class="ud-email-address">{{ email.email }}</span>
+                <span class="ud-email-chips">
+                  @if (email.isDefault) {
+                    <tyro-ui-chip variant="accent" size="sm" icon="ri-star-line">{{ lang() === 'en' ? 'Default' : 'Par défaut' }}</tyro-ui-chip>
+                  }
+                  @if (email.isVerified) {
+                    <tyro-ui-chip variant="success" size="sm" icon="ri-checkbox-circle-line">{{ lang() === 'en' ? 'Verified' : 'Vérifié' }}</tyro-ui-chip>
+                  } @else {
+                    <tyro-ui-chip variant="warning" size="sm" icon="ri-time-line">{{ lang() === 'en' ? 'Not verified' : 'Non vérifié' }}</tyro-ui-chip>
+                  }
+                </span>
+              </div>
+              @if (editable() && admin.canUpdate() && canDeleteEmail(email)) {
+                <tyro-ui-button size="sm" variant="ghost" icon="ri-delete-bin-line" [disabled]="busy()" (clicked)="deleteEmail(email)"></tyro-ui-button>
+              }
+            </li>
+          }
+        </ul>
+
+        @if (editable() && admin.canUpdate() && u.emails.length < 5) {
+          <form class="ud-inline-form" (submit)="addEmail($event)">
+            <tyro-ui-text-field
+              type="email"
+              [label]="lang() === 'en' ? 'Add an e-mail' : 'Ajouter un email'"
+              [value]="newEmail"
+              [disabled]="busy()"
+              (valueChange)="newEmail = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-button type="submit" icon="ri-add-line" [disabled]="busy() || !newEmail.trim()">
+              {{ lang() === 'en' ? 'Add' : 'Ajouter' }}
+            </tyro-ui-button>
+          </form>
+        }
+        @if (emailError(); as error) {
+          <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+        }
+      </tyro-ui-bento-card>
+
+    </div>
+
+    <!-- ── Sécurité ──────────────────────────────────────── -->
+    @if (editable() && !isSelf() && (admin.canBan() || admin.canRevoke())) {
+      <tyro-ui-bento-card icon="ri-shield-keyhole-line" [label]="lang() === 'en' ? 'Security' : 'Sécurité'" [title]="lang() === 'en' ? 'Sessions & suspension' : 'Sessions et suspension'">
+        <div class="ud-security">
+
+          @if (admin.canRevoke()) {
+          <div class="ud-action">
+            <div>
+              <strong>{{ lang() === 'en' ? 'Sign out everywhere' : 'Déconnecter partout' }}</strong>
+              <p class="ud-hint">{{ lang() === 'en' ? 'Closes every session without suspending the account.' : 'Ferme toutes les sessions sans suspendre le compte.' }}</p>
+            </div>
+            <tyro-ui-button variant="lite" icon="ri-logout-box-r-line" [disabled]="busy()" (clicked)="revokeTokens()">
+              {{ lang() === 'en' ? 'Sign out' : 'Déconnecter' }}
+            </tyro-ui-button>
+          </div>
+          }
+
+          @if (admin.canBan() && u.bannedAt) {
+            <div class="ud-action">
+              <div>
+                <strong>{{ lang() === 'en' ? 'Reactivate the account' : 'Réactiver le compte' }}</strong>
+                <p class="ud-hint">{{ lang() === 'en' ? 'Sign-in will be allowed again.' : 'La connexion sera de nouveau autorisée.' }}</p>
+              </div>
+              <tyro-ui-button variant="classic" icon="ri-checkbox-circle-line" [disabled]="busy()" (clicked)="unban()">
+                {{ lang() === 'en' ? 'Reactivate' : 'Réactiver' }}
+              </tyro-ui-button>
+            </div>
+          } @else if (admin.canBan()) {
+            <div class="ud-action ud-action--column">
+              <div>
+                <strong>{{ lang() === 'en' ? 'Suspend the account' : 'Suspendre le compte' }}</strong>
+                <p class="ud-hint">{{ lang() === 'en' ? 'Closes every session and refuses sign-in until reactivation.' : 'Ferme toutes les sessions et refuse la connexion jusqu\'à la réactivation.' }}</p>
+              </div>
+              <div class="ud-inline-form">
+                <tyro-ui-text-field
+                  [label]="lang() === 'en' ? 'Reason (optional, 500 max)' : 'Motif (facultatif, 500 max)'"
+                  [value]="banReason"
+                  [disabled]="busy()"
+                  (valueChange)="banReason = $event">
+                </tyro-ui-text-field>
+                <tyro-ui-button variant="ghost" icon="ri-forbid-line" [disabled]="busy()" (clicked)="ban()">
+                  {{ lang() === 'en' ? 'Suspend' : 'Suspendre' }}
+                </tyro-ui-button>
+              </div>
+            </div>
+          }
+
+        </div>
+      </tyro-ui-bento-card>
+    }
+
+    <!-- ── Droits ────────────────────────────────────────── -->
+    <tyro-ui-bento-card icon="ri-key-2-line" [label]="lang() === 'en' ? 'Access' : 'Accès'" [title]="lang() === 'en' ? 'Permissions' : 'Permissions'">
+      @if (u.accessLevel === 'user') {
+        <p class="ud-hint">{{ lang() === 'en' ? 'Public account: permissions never apply.' : 'Compte public : les permissions ne s\'appliquent jamais.' }}</p>
+      } @else if (!u.permissions?.length) {
+        <p class="ud-hint">{{ lang() === 'en' ? 'No permission granted directly.' : 'Aucune permission accordée directement.' }}</p>
+      } @else {
+        <ul class="ud-perms">
+          @for (perm of u.permissions; track perm.id) {
+            <li class="ud-perm">
+              <div>
+                <strong>{{ perm.permission?.label }}</strong>
+                <code class="ud-code">{{ perm.permission?.name }}</code>
+              </div>
+              <div class="ud-perm-by">
+                <app-hub-user [user]="perm.grantedBy"></app-hub-user>
+                <span class="ud-hint">{{ date(perm.grantedAt) }}</span>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </tyro-ui-bento-card>
+
+  </div>
+}

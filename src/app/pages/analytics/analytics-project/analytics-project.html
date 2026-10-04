@@ -1,0 +1,209 @@
+<div class="ap-back">
+  <tyro-ui-button size="sm" variant="ghost" icon="ri-arrow-left-line" (clicked)="back()">
+    Analytics
+  </tyro-ui-button>
+</div>
+
+@if (notFound()) {
+  <tyro-ui-alert
+    type="warning"
+    [closable]="false"
+    [title]="lang() === 'en' ? 'Project not found' : 'Projet introuvable'"
+    [message]="lang() === 'en' ? 'This project does not exist or has been deleted.' : 'Ce projet n\'existe pas ou a été supprimé.'">
+  </tyro-ui-alert>
+} @else if (loadError()) {
+  <tyro-ui-alert
+    type="danger"
+    [closable]="false"
+    [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+    [message]="lang() === 'en' ? 'Unable to load this project from Tyrolium API.' : 'Impossible de charger ce projet depuis l\'API Tyrolium.'">
+  </tyro-ui-alert>
+} @else {
+
+  @if (project(); as p) {
+    <tyro-ui-page-header [label]="p.tag" [title]="p.domainNames[0]">
+      {{ p.description || (lang() === 'en' ? 'No description.' : 'Aucune description.') }}
+    </tyro-ui-page-header>
+  } @else {
+    <tyro-ui-skeleton width="320px" height="40px"></tyro-ui-skeleton>
+  }
+
+  <div class="ap-page">
+
+    <div class="ap-period">
+      <span class="ap-period-label">
+        {{ lang() === 'en' ? 'Statistics period' : 'Période des statistiques' }}
+        @if (lastVisit(); as last) {
+          · {{ lang() === 'en' ? 'last visit' : 'dernière visite' }} {{ date(last) }}
+        }
+      </span>
+      <app-analytics-period [value]="period()" (changed)="setPeriod($event)"></app-analytics-period>
+    </div>
+
+    @if (statsError()) {
+      <tyro-ui-alert
+        type="warning"
+        [closable]="false"
+        [message]="lang() === 'en' ? 'Unable to load the statistics.' : 'Impossible de charger les statistiques.'">
+      </tyro-ui-alert>
+    }
+
+    <app-analytics-stats [summary]="statsLoading() ? null : stats()?.summary ?? null"></app-analytics-stats>
+
+    <div class="ap-grid">
+
+      <!-- ── Projet ────────────────────────────────────── -->
+      <tyro-ui-bento-card icon="ri-folder-chart-line" [label]="lang() === 'en' ? 'Project' : 'Projet'" [title]="lang() === 'en' ? 'Domains' : 'Domaines'">
+        @if (project(); as p) {
+          <div class="ap-chips">
+            @for (domain of p.domainNames; track domain) {
+              <tyro-ui-chip icon="ri-global-line">{{ domain }}</tyro-ui-chip>
+            }
+          </div>
+
+          @if (analytics.canUpdate()) {
+            <form class="ap-inline-form" (submit)="addDomain($event)">
+              <tyro-ui-text-field
+                [label]="lang() === 'en' ? 'Add a domain' : 'Ajouter un domaine'"
+                placeholder="www.exemple.fr"
+                [value]="newDomain"
+                [disabled]="addingDomain()"
+                (valueChange)="newDomain = $event">
+              </tyro-ui-text-field>
+              <tyro-ui-button type="submit" icon="ri-add-line" [disabled]="addingDomain() || !newDomain.trim()">
+                {{ lang() === 'en' ? 'Add' : 'Ajouter' }}
+              </tyro-ui-button>
+            </form>
+            @if (domainError(); as error) {
+              <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+            }
+          }
+
+          <div class="ap-desc">
+            <span class="ap-desc-label">Description</span>
+            @if (editingDesc()) {
+              <form class="ap-inline-form" (submit)="saveDescription($event)">
+                <tyro-ui-text-field
+                  [label]="lang() === 'en' ? 'Description (empty = removed)' : 'Description (vide = supprimée)'"
+                  [value]="newDescription"
+                  [disabled]="savingDesc()"
+                  (valueChange)="newDescription = $event">
+                </tyro-ui-text-field>
+                <tyro-ui-button type="submit" icon="ri-check-line" [disabled]="savingDesc()">
+                  {{ lang() === 'en' ? 'Save' : 'Enregistrer' }}
+                </tyro-ui-button>
+                <tyro-ui-button variant="ghost" icon="ri-close-line" [disabled]="savingDesc()" (clicked)="cancelEditDescription()"></tyro-ui-button>
+              </form>
+              @if (descError(); as error) {
+                <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+              }
+            } @else {
+              <div class="ap-desc-row">
+                <p class="ap-desc-text" [class.ap-desc-text--empty]="!p.description">
+                  {{ p.description || (lang() === 'en' ? 'No description.' : 'Aucune description.') }}
+                </p>
+                @if (analytics.canUpdate()) {
+                  <tyro-ui-button size="sm" variant="lite" icon="ri-pencil-line" (clicked)="startEditDescription()">
+                    {{ lang() === 'en' ? 'Edit' : 'Modifier' }}
+                  </tyro-ui-button>
+                }
+              </div>
+            }
+          </div>
+
+          <dl class="ap-meta">
+            <dt>{{ lang() === 'en' ? 'Created' : 'Créé le' }}</dt>
+            <dd>{{ date(p.createdAt) }}</dd>
+            <dt>{{ lang() === 'en' ? 'By' : 'Par' }}</dt>
+            <dd><app-hub-user [user]="p.createdBy"></app-hub-user></dd>
+          </dl>
+
+          @if (analytics.canDelete()) {
+            <div class="ap-danger">
+              <tyro-ui-button variant="ghost" icon="ri-delete-bin-line" [disabled]="deleting()" (clicked)="remove()">
+                {{ lang() === 'en' ? 'Delete project' : 'Supprimer le projet' }}
+              </tyro-ui-button>
+            </div>
+          }
+        } @else {
+          <tyro-ui-skeleton height="32px" [count]="3"></tyro-ui-skeleton>
+        }
+      </tyro-ui-bento-card>
+
+      <!-- ── Installation ──────────────────────────────── -->
+      <tyro-ui-bento-card icon="ri-code-s-slash-line" [label]="lang() === 'en' ? 'Installation' : 'Installation'" title="Snippet">
+        <p class="ap-help">
+          @if (lang() === 'en') {
+            Paste this code in the <code>&lt;head&gt;</code> of every page of the site.
+          } @else {
+            Collez ce code dans le <code>&lt;head&gt;</code> de chaque page du site.
+          }
+        </p>
+        @if (project()) {
+          <pre class="ap-snippet">{{ snippet() }}</pre>
+          <div class="ap-snippet-actions">
+            <tyro-ui-button size="sm" variant="lite" icon="ri-file-copy-line" (clicked)="copySnippet()">
+              {{ lang() === 'en' ? 'Copy' : 'Copier' }}
+            </tyro-ui-button>
+          </div>
+        } @else {
+          <tyro-ui-skeleton height="64px"></tyro-ui-skeleton>
+        }
+        <p class="ap-help ap-help--sm">
+          {{ lang() === 'en'
+            ? 'Set data-tyro-logged-in to "true" on pages where the visitor is signed in.'
+            : 'Passez data-tyro-logged-in à "true" sur les pages où le visiteur est connecté.' }}
+        </p>
+      </tyro-ui-bento-card>
+
+    </div>
+
+    <div class="ap-grid">
+      <tyro-ui-bento-card icon="ri-calendar-line" [label]="lang() === 'en' ? 'Traffic' : 'Fréquentation'" [title]="lang() === 'en' ? 'Visits per day' : 'Visites par jour'">
+        @if (statsLoading()) {
+          <tyro-ui-skeleton height="24px" [count]="6"></tyro-ui-skeleton>
+        } @else {
+          <app-analytics-daily [days]="stats()?.visitsPerDay ?? []" [range]="range()"></app-analytics-daily>
+        }
+      </tyro-ui-bento-card>
+
+      <tyro-ui-bento-card icon="ri-bar-chart-horizontal-line" label="Top 10" [title]="lang() === 'en' ? 'Most viewed pages' : 'Pages les plus vues'">
+        @if (statsLoading()) {
+          <tyro-ui-skeleton height="36px" [count]="4"></tyro-ui-skeleton>
+        } @else {
+          <app-analytics-top-pages [pages]="stats()?.topPages ?? []"></app-analytics-top-pages>
+        }
+      </tyro-ui-bento-card>
+    </div>
+
+    <!-- ── Visites ─────────────────────────────────────── -->
+    <tyro-ui-bento-card icon="ri-footprint-line" [label]="lang() === 'en' ? 'History' : 'Historique'" [title]="lang() === 'en' ? 'Visits' : 'Visites'">
+      @if (loading() && !inputs().length) {
+        <tyro-ui-skeleton height="36px" [count]="5"></tyro-ui-skeleton>
+      } @else if (!inputs().length) {
+        <p class="ap-empty">
+          @if (inputsError()) {
+            {{ lang() === 'en' ? 'Unable to load the visits.' : 'Impossible de charger les visites.' }}
+          } @else {
+            {{ lang() === 'en'
+              ? 'No visit recorded yet. Check that the snippet is installed on the site.'
+              : 'Aucune visite enregistrée pour l\'instant. Vérifiez que le snippet est installé sur le site.' }}
+          }
+        </p>
+      } @else {
+        <app-analytics-visits [inputs]="inputs()" [showProject]="false"></app-analytics-visits>
+        <div class="ap-more">
+          <span class="ap-muted">
+            {{ inputs().length }} / {{ inputsTotal() }} {{ lang() === 'en' ? 'visits loaded' : 'visites chargées' }}
+          </span>
+          @if (hasMoreInputs()) {
+            <tyro-ui-button size="sm" variant="lite" icon="ri-arrow-down-line" [disabled]="inputsLoading()" (clicked)="loadMoreInputs()">
+              {{ inputsLoading() ? (lang() === 'en' ? 'Loading…' : 'Chargement…') : (lang() === 'en' ? 'Load more' : 'Charger plus') }}
+            </tyro-ui-button>
+          }
+        </div>
+      }
+    </tyro-ui-bento-card>
+
+  </div>
+}

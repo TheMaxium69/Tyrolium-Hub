@@ -1,0 +1,8 @@
+<tyro-ui-login
+  appName="Tyrolium Hub"
+  footer="Logiciel interne Tyrolium · Accès restreint"
+  footerEn="Tyrolium internal software · Restricted access"
+  [loading]="auth.loading()"
+  [error]="auth.error()"
+  (submitted)="onSubmit($event)">
+</tyro-ui-login>

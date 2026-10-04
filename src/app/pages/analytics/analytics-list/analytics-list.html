@@ -1,0 +1,182 @@
+<tyro-ui-page-header label="Tyrolium" title="Analytics">
+  {{ lang() === 'en'
+    ? 'Traffic of the sites tracked by the Tyrolium Analytics script.'
+    : 'Fréquentation des sites suivis par le script Tyrolium Analytics.' }}
+</tyro-ui-page-header>
+
+<div class="al-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert
+      type="danger"
+      [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load analytics from Tyrolium API.' : 'Impossible de charger les analytics depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  <!-- ── Statistiques ───────────────────────────────────── -->
+  <div class="al-period">
+    <span class="al-period-label">{{ lang() === 'en' ? 'Statistics period' : 'Période des statistiques' }}</span>
+    <app-analytics-period [value]="period()" (changed)="setPeriod($event)"></app-analytics-period>
+  </div>
+
+  @if (statsError()) {
+    <tyro-ui-alert
+      type="warning"
+      [closable]="false"
+      [message]="lang() === 'en' ? 'Unable to load the statistics.' : 'Impossible de charger les statistiques.'">
+    </tyro-ui-alert>
+  }
+
+  <app-analytics-stats
+    [summary]="statsLoading() ? null : stats()?.summary ?? null"
+    [projects]="loading() ? null : projects().length">
+  </app-analytics-stats>
+
+  <div class="al-grid">
+    <tyro-ui-bento-card icon="ri-calendar-line" [label]="lang() === 'en' ? 'Traffic' : 'Fréquentation'" [title]="lang() === 'en' ? 'Visits per day' : 'Visites par jour'">
+      @if (statsLoading()) {
+        <tyro-ui-skeleton height="24px" [count]="6"></tyro-ui-skeleton>
+      } @else {
+        <app-analytics-daily [days]="stats()?.visitsPerDay ?? []" [range]="range()"></app-analytics-daily>
+      }
+    </tyro-ui-bento-card>
+
+    <tyro-ui-bento-card icon="ri-bar-chart-horizontal-line" [label]="lang() === 'en' ? 'All sites · Top 10' : 'Tous les sites · Top 10'" [title]="lang() === 'en' ? 'Most viewed pages' : 'Pages les plus vues'">
+      @if (statsLoading()) {
+        <tyro-ui-skeleton height="36px" [count]="5"></tyro-ui-skeleton>
+      } @else {
+        <app-analytics-top-pages [pages]="stats()?.topPages ?? []"></app-analytics-top-pages>
+      }
+    </tyro-ui-bento-card>
+  </div>
+
+  <!-- ── Projets ─────────────────────────────────────────── -->
+  <tyro-ui-bento-card
+    icon="ri-folder-chart-line"
+    [label]="lang() === 'en' ? 'Tracked sites' : 'Sites suivis'"
+    [title]="lang() === 'en' ? 'Projects' : 'Projets'">
+
+    @if (analytics.canCreate()) {
+      <div tyro-header-action>
+        <tyro-ui-button
+          size="sm"
+          [variant]="createOpen() ? 'ghost' : 'classic'"
+          [icon]="createOpen() ? 'ri-close-line' : 'ri-add-line'"
+          (clicked)="toggleCreate()">
+          {{ createOpen()
+            ? (lang() === 'en' ? 'Cancel' : 'Annuler')
+            : (lang() === 'en' ? 'New project' : 'Nouveau projet') }}
+        </tyro-ui-button>
+      </div>
+    }
+
+    @if (createOpen() && analytics.canCreate()) {
+      <form class="al-create" (submit)="create($event)">
+        <div class="al-create-fields">
+          <tyro-ui-text-field
+            [label]="lang() === 'en' ? 'Domain names (comma separated)' : 'Noms de domaine (séparés par des virgules)'"
+            [placeholder]="'tyrolium.fr, www.tyrolium.fr'"
+            [value]="newDomains"
+            [disabled]="creating()"
+            (valueChange)="newDomains = $event">
+          </tyro-ui-text-field>
+          <tyro-ui-text-field
+            [label]="lang() === 'en' ? 'Description (optional)' : 'Description (facultative)'"
+            [value]="newDescription"
+            [disabled]="creating()"
+            (valueChange)="newDescription = $event">
+          </tyro-ui-text-field>
+        </div>
+
+        @if (createError(); as error) {
+          <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+        }
+
+        <div class="al-create-actions">
+          <tyro-ui-button type="submit" variant="gradient" icon="ri-check-line" [disabled]="creating()">
+            {{ creating()
+              ? (lang() === 'en' ? 'Creating…' : 'Création…')
+              : (lang() === 'en' ? 'Create project' : 'Créer le projet') }}
+          </tyro-ui-button>
+        </div>
+      </form>
+    }
+
+    @if (loading()) {
+      <tyro-ui-skeleton height="44px" [count]="3"></tyro-ui-skeleton>
+    } @else if (!projectRows().length) {
+      <p class="al-empty">
+        {{ lang() === 'en' ? 'No project yet.' : 'Aucun projet pour l\'instant.' }}
+      </p>
+    } @else {
+      <tyro-ui-data-table [columns]="projectCols" [data]="projectRows()" [searchable]="true" [paginated]="true" [pageSize]="10">
+
+        <ng-template tyroCol="domains" let-row>
+          <div class="al-chips">
+            @for (domain of $any(row).domainNames; track domain) {
+              <tyro-ui-chip size="sm" icon="ri-global-line">{{ domain }}</tyro-ui-chip>
+            }
+          </div>
+        </ng-template>
+
+        <ng-template tyroCol="tag" let-row>
+          <code class="al-code">{{ $any(row).tag }}</code>
+        </ng-template>
+
+        <ng-template tyroCol="description" let-row>
+          <span class="al-muted">{{ $any(row).description || '-' }}</span>
+        </ng-template>
+
+        <ng-template tyroCol="visits" let-row>
+          <strong>{{ visits($any(row).visits) }}</strong>
+        </ng-template>
+
+        <ng-template tyroCol="createdAt" let-row>
+          {{ date($any(row).createdAt) }}
+        </ng-template>
+
+        <ng-template tyroCol="createdBy" let-row>
+          <app-hub-user [user]="$any(row).author"></app-hub-user>
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <tyro-ui-button size="sm" variant="lite" iconRight="ri-arrow-right-line" (clicked)="open($any(row).id)">
+            {{ lang() === 'en' ? 'Open' : 'Voir' }}
+          </tyro-ui-button>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+  <!-- ── Dernières visites ──────────────────────────────── -->
+  <tyro-ui-bento-card
+    icon="ri-footprint-line"
+    [label]="lang() === 'en' ? 'All sites' : 'Tous les sites'"
+    [title]="lang() === 'en' ? 'Latest visits' : 'Dernières visites'">
+    @if (loading() && !inputs().length) {
+      <tyro-ui-skeleton height="36px" [count]="5"></tyro-ui-skeleton>
+    } @else if (!inputs().length) {
+      <p class="al-empty">
+        {{ inputsError()
+          ? (lang() === 'en' ? 'Unable to load the visits.' : 'Impossible de charger les visites.')
+          : (lang() === 'en' ? 'No visit recorded yet.' : 'Aucune visite enregistrée pour l\'instant.') }}
+      </p>
+    } @else {
+      <app-analytics-visits [inputs]="inputs()"></app-analytics-visits>
+      <div class="al-more">
+        <span class="al-muted">
+          {{ inputs().length }} / {{ inputsTotal() }} {{ lang() === 'en' ? 'visits loaded' : 'visites chargées' }}
+        </span>
+        @if (hasMoreInputs()) {
+          <tyro-ui-button size="sm" variant="lite" icon="ri-arrow-down-line" [disabled]="inputsLoading()" (clicked)="loadMoreInputs()">
+            {{ inputsLoading() ? (lang() === 'en' ? 'Loading…' : 'Chargement…') : (lang() === 'en' ? 'Load more' : 'Charger plus') }}
+          </tyro-ui-button>
+        }
+      </div>
+    }
+  </tyro-ui-bento-card>
+
+</div>

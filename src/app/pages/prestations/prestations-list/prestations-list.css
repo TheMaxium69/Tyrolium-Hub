@@ -1,0 +1,28 @@
+.pl-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.pl-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.pl-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--dash-text);
+  line-height: 1.1;
+}
+
+.pl-value--sm { font-size: 1.4rem; }
+
+.pl-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--dash-text-muted);
+}

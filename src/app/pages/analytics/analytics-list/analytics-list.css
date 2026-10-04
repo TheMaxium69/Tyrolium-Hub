@@ -1,0 +1,78 @@
+.al-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.al-period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.al-period-label {
+  font-size: 0.85rem;
+  color: var(--dash-text-2);
+}
+
+.al-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 1.5rem;
+}
+
+.al-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+
+.al-create {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.al-create-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.al-create-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.al-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.al-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  background: var(--dash-border);
+  color: var(--dash-text);
+  word-break: break-all;
+}
+
+.al-muted { color: var(--dash-text-2); }
+
+.al-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--dash-text-muted);
+}

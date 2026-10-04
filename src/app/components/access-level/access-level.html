@@ -1,0 +1,16 @@
+<span class="alv">
+  @switch (level()) {
+    @case ('owner') {
+      <tyro-ui-chip variant="accent" size="sm" icon="ri-vip-crown-line">Owner</tyro-ui-chip>
+    }
+    @case ('interne') {
+      <tyro-ui-chip variant="success" size="sm" icon="ri-shield-user-line">{{ lang() === 'en' ? 'Internal' : 'Interne' }}</tyro-ui-chip>
+    }
+    @default {
+      <tyro-ui-chip size="sm" icon="ri-user-line">{{ lang() === 'en' ? 'User' : 'Utilisateur' }}</tyro-ui-chip>
+    }
+  }
+  @if (banned()) {
+    <tyro-ui-chip variant="danger" size="sm" icon="ri-forbid-line">{{ lang() === 'en' ? 'Suspended' : 'Suspendu' }}</tyro-ui-chip>
+  }
+</span>

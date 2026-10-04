@@ -1,0 +1,33 @@
+<div class="as-grid">
+
+  @if (projects() !== null) {
+    <tyro-ui-bento-card size="small" icon="ri-folder-chart-line" [label]="lang() === 'en' ? 'Projects' : 'Projets'">
+      <span class="as-value">{{ projects() }}</span>
+    </tyro-ui-bento-card>
+  }
+
+  <tyro-ui-bento-card size="small" icon="ri-eye-line" [label]="lang() === 'en' ? 'Visits' : 'Visites'">
+    @if (summary(); as s) {
+      <span class="as-value">{{ s.visits }}</span>
+    } @else {
+      <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton>
+    }
+  </tyro-ui-bento-card>
+
+  <tyro-ui-bento-card size="small" icon="ri-user-3-line" [label]="lang() === 'en' ? 'Unique visitors' : 'Visiteurs uniques'">
+    @if (summary(); as s) {
+      <span class="as-value">{{ s.uniqueVisitors }}</span>
+    } @else {
+      <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton>
+    }
+  </tyro-ui-bento-card>
+
+  <tyro-ui-bento-card size="small" icon="ri-user-follow-line" [label]="lang() === 'en' ? 'Logged-in visits' : 'Visites connectées'">
+    @if (summary(); as s) {
+      <span class="as-value">{{ s.loggedInVisits }}<small>{{ loggedRatio() }}%</small></span>
+    } @else {
+      <tyro-ui-skeleton width="80px" height="28px"></tyro-ui-skeleton>
+    }
+  </tyro-ui-bento-card>
+
+</div>

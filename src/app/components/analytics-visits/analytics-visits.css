@@ -1,0 +1,8 @@
+.av-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.8rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 6px;
+  background: var(--dash-border);
+  color: var(--dash-text);
+}

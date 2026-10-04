@@ -1,0 +1,135 @@
+.ap-back { margin-bottom: 0.75rem; }
+
+.ap-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+.ap-period {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ap-period-label,
+.ap-muted {
+  font-size: 0.85rem;
+  color: var(--dash-text-2);
+}
+
+.ap-more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ap-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.ap-inline-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.ap-inline-form tyro-ui-text-field { flex: 1; }
+
+.ap-desc {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--dash-border);
+}
+
+.ap-desc-label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--dash-text-2);
+}
+
+.ap-desc-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.ap-desc-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--dash-text);
+}
+
+.ap-desc-text--empty { color: var(--dash-text-muted); }
+
+.ap-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1rem;
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+}
+
+.ap-meta dt { color: var(--dash-text-2); }
+.ap-meta dd { margin: 0; color: var(--dash-text); font-weight: 600; }
+
+.ap-danger {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--dash-border);
+}
+
+.ap-help {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--dash-text-2);
+}
+
+.ap-help--sm {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  color: var(--dash-text-muted);
+}
+
+.ap-snippet {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: var(--dash-bg);
+  box-shadow: var(--shadow-inset);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--dash-text);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.ap-snippet-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.6rem;
+}
+
+.ap-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--dash-text-muted);
+}

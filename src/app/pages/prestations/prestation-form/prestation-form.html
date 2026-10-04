@@ -1,0 +1,222 @@
+<div class="pf-back">
+  <tyro-ui-button size="sm" variant="ghost" icon="ri-arrow-left-line" (clicked)="back()">
+    {{ lang() === 'en' ? 'Services' : 'Prestations' }}
+  </tyro-ui-button>
+</div>
+
+@if (notFound()) {
+  <tyro-ui-alert
+    type="warning"
+    [closable]="false"
+    [title]="lang() === 'en' ? 'Service not found' : 'Prestation introuvable'"
+    [message]="lang() === 'en' ? 'This service does not exist or has been deleted.' : 'Cette prestation n\'existe pas ou a été supprimée.'">
+  </tyro-ui-alert>
+} @else if (loadError()) {
+  <tyro-ui-alert
+    type="danger"
+    [closable]="false"
+    [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+    [message]="lang() === 'en' ? 'Unable to load data from Tyrolium API.' : 'Impossible de charger les données depuis l\'API Tyrolium.'">
+  </tyro-ui-alert>
+} @else if (loading()) {
+  <tyro-ui-skeleton width="320px" height="48px"></tyro-ui-skeleton>
+  <div class="pf-page">
+    <tyro-ui-skeleton height="220px" [count]="2"></tyro-ui-skeleton>
+  </div>
+} @else {
+
+  @if (prestation(); as p) {
+    <tyro-ui-page-header [label]="'Prestation #' + p.id" [title]="p.offre.displayName">
+      <span class="pf-header-meta">
+        <app-prestation-status [status]="p.status"></app-prestation-status>
+        {{ lang() === 'en' ? 'for' : 'pour' }} <app-prestation-client [prestation]="p"></app-prestation-client>
+      </span>
+    </tyro-ui-page-header>
+  } @else {
+    <tyro-ui-page-header label="Prestations" [title]="lang() === 'en' ? 'New service' : 'Nouvelle prestation'">
+      {{ lang() === 'en' ? 'Sell an offer to a client.' : 'Vendre une offre à un client.' }}
+    </tyro-ui-page-header>
+  }
+
+  <div class="pf-page">
+
+    @if (readOnly()) {
+      <tyro-ui-alert
+        type="info"
+        [closable]="false"
+        [message]="lang() === 'en' ? 'Read only: you do not have the permission to edit services.' : 'Lecture seule : vous n\'avez pas la permission de modifier les prestations.'">
+      </tyro-ui-alert>
+    }
+
+    <form class="pf-form" (submit)="save($event)">
+      <div class="pf-grid">
+
+        <!-- ── Offre & client ──────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-user-star-line" [label]="lang() === 'en' ? 'Sale' : 'Vente'" [title]="lang() === 'en' ? 'Offer & client' : 'Offre et client'">
+          <div class="pf-fields">
+
+            <div class="pf-field">
+              <span class="pf-label">{{ lang() === 'en' ? 'Offer' : 'Offre' }}</span>
+              <tyro-ui-select
+                [items]="offreItems()"
+                [value]="form.offreId"
+                [placeholder]="lang() === 'en' ? 'Choose an offer' : 'Choisir une offre'"
+                [disabled]="readOnly() || saving()"
+                (valueChange)="onOffreChange($event)">
+              </tyro-ui-select>
+            </div>
+
+            <div class="pf-field">
+              <span class="pf-label">Client</span>
+              @if (!readOnly()) {
+                <tyro-ui-button-group
+                  size="sm"
+                  [items]="clientModeItems()"
+                  [value]="form.clientMode"
+                  (valueChange)="form.clientMode = $any($event)">
+                </tyro-ui-button-group>
+              }
+            </div>
+
+            @if (form.clientMode === 'account') {
+              @if (prestation()?.user && !form.userId) {
+                <div class="pf-current-user">
+                  <app-hub-user [user]="prestation()!.user" size="md"></app-hub-user>
+                </div>
+              }
+              @if (service.canPickUser() && !readOnly()) {
+                <div class="pf-field">
+                  <span class="pf-label">{{ prestation()?.user ? (lang() === 'en' ? 'Change account' : 'Changer de compte') : (lang() === 'en' ? 'Useritium account' : 'Compte Useritium') }}</span>
+                  <tyro-ui-select
+                    [items]="accountItems()"
+                    [value]="form.userId"
+                    [placeholder]="lang() === 'en' ? 'Choose an account' : 'Choisir un compte'"
+                    [disabled]="saving()"
+                    (valueChange)="form.userId = $event">
+                  </tyro-ui-select>
+                </div>
+              } @else if (!prestation()?.user) {
+                <p class="pf-hint">
+                  {{ lang() === 'en'
+                    ? 'Linking a Useritium account requires the permission to view users.'
+                    : 'Lier un compte Useritium nécessite la permission de voir les utilisateurs.' }}
+                </p>
+              }
+            } @else {
+              <div class="pf-fields pf-fields--2">
+                <tyro-ui-text-field
+                  [label]="lang() === 'en' ? 'Client name' : 'Nom du client'"
+                  [value]="form.clientName"
+                  [disabled]="readOnly() || saving()"
+                  (valueChange)="form.clientName = $event">
+                </tyro-ui-text-field>
+                <tyro-ui-text-field
+                  type="email"
+                  [label]="lang() === 'en' ? 'Client e-mail (optional)' : 'Email du client (facultatif)'"
+                  [value]="form.clientEmail"
+                  [disabled]="readOnly() || saving()"
+                  (valueChange)="form.clientEmail = $event">
+                </tyro-ui-text-field>
+              </div>
+            }
+
+          </div>
+        </tyro-ui-bento-card>
+
+        <!-- ── Suivi ───────────────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-donut-chart-line" [label]="lang() === 'en' ? 'Tracking' : 'Suivi'" [title]="lang() === 'en' ? 'Status & progress' : 'Statut et avancement'">
+          <div class="pf-fields">
+
+            <div class="pf-field">
+              <span class="pf-label">{{ lang() === 'en' ? 'Status' : 'Statut' }}</span>
+              <tyro-ui-select
+                [items]="statusItems()"
+                [value]="form.status"
+                [disabled]="readOnly() || saving()"
+                (valueChange)="form.status = $any($event)">
+              </tyro-ui-select>
+              @if (form.status === 'terminated' && prestation()?.status !== 'terminated') {
+                <span class="pf-hint">{{ lang() === 'en' ? 'The end date will be set automatically.' : 'La date de fin sera renseignée automatiquement.' }}</span>
+              }
+            </div>
+
+            <div class="pf-fields pf-fields--2">
+              <tyro-ui-text-field
+                type="number"
+                [label]="lang() === 'en' ? 'Progress (%)' : 'Avancement (%)'"
+                [value]="form.progress"
+                [disabled]="readOnly() || saving()"
+                (valueChange)="form.progress = $event">
+              </tyro-ui-text-field>
+              <tyro-ui-text-field
+                [label]="lang() === 'en' ? 'Price applied excl. VAT (€)' : 'Prix appliqué HT (€)'"
+                [value]="form.price"
+                [disabled]="readOnly() || saving()"
+                (valueChange)="form.price = $event">
+              </tyro-ui-text-field>
+            </div>
+
+            <tyro-ui-progress-bar variant="gradient" [value]="progressValue()" [showLabel]="true"
+              [label]="lang() === 'en' ? 'Progress shown to the client' : 'Avancement affiché au client'">
+            </tyro-ui-progress-bar>
+
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Description (optional)' : 'Description (facultative)'"
+              [value]="form.content"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.content = $event">
+            </tyro-ui-text-field>
+
+          </div>
+        </tyro-ui-bento-card>
+
+      </div>
+
+      @if (formError(); as error) {
+        <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+      }
+
+      @if (!readOnly()) {
+        <div class="pf-actions">
+          @if (isNew()) {
+            <tyro-ui-button variant="ghost" [disabled]="saving()" (clicked)="back()">
+              {{ lang() === 'en' ? 'Cancel' : 'Annuler' }}
+            </tyro-ui-button>
+          }
+          <tyro-ui-button type="submit" variant="gradient" icon="ri-check-line" [disabled]="saving()">
+            {{ saving()
+              ? (lang() === 'en' ? 'Saving…' : 'Enregistrement…')
+              : (isNew() ? (lang() === 'en' ? 'Create service' : 'Créer la prestation') : (lang() === 'en' ? 'Save' : 'Enregistrer')) }}
+          </tyro-ui-button>
+        </div>
+      }
+    </form>
+
+    <!-- ── Informations ──────────────────────────────────── -->
+    @if (prestation(); as p) {
+      <tyro-ui-bento-card icon="ri-information-line" [label]="lang() === 'en' ? 'History' : 'Historique'" title="Informations">
+        <dl class="pf-meta">
+          <dt>{{ lang() === 'en' ? 'Created' : 'Créée le' }}</dt>
+          <dd>{{ date(p.createdAt) }}</dd>
+          <dt>{{ lang() === 'en' ? 'By' : 'Par' }}</dt>
+          <dd><app-hub-user [user]="p.createdBy"></app-hub-user></dd>
+          <dt>{{ lang() === 'en' ? 'Started' : 'Début' }}</dt>
+          <dd>{{ date(p.startedAt) }}</dd>
+          <dt>{{ lang() === 'en' ? 'Ended' : 'Fin' }}</dt>
+          <dd>{{ date(p.endedAt) }}</dd>
+          <dt>{{ lang() === 'en' ? 'Catalogue price' : 'Prix catalogue' }}</dt>
+          <dd>{{ price(p.offre.price) }}</dd>
+        </dl>
+
+        @if (service.canPrestation('delete')) {
+          <div class="pf-danger">
+            <tyro-ui-button variant="ghost" icon="ri-delete-bin-line" (clicked)="remove()">
+              {{ lang() === 'en' ? 'Delete service' : 'Supprimer la prestation' }}
+            </tyro-ui-button>
+          </div>
+        }
+      </tyro-ui-bento-card>
+    }
+
+  </div>
+}

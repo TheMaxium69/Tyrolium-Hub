@@ -1,0 +1,25 @@
+<tyro-ui-data-table
+  [columns]="columns()"
+  [data]="rows()"
+  [searchable]="true"
+  [filterable]="true"
+  [paginated]="true"
+  [pageSize]="pageSize()">
+
+  <ng-template tyroCol="createdAt" let-row>
+    {{ date($any(row).createdAt) }}
+  </ng-template>
+
+  <ng-template tyroCol="uri" let-row>
+    <code class="av-code">{{ $any(row).uri }}</code>
+  </ng-template>
+
+  <ng-template tyroCol="isLogin" let-row>
+    @if ($any(row).isLogin) {
+      <tyro-ui-chip variant="success" size="sm" icon="ri-user-follow-line">{{ lang() === 'en' ? 'Yes' : 'Oui' }}</tyro-ui-chip>
+    } @else {
+      <tyro-ui-chip size="sm">{{ lang() === 'en' ? 'No' : 'Non' }}</tyro-ui-chip>
+    }
+  </ng-template>
+
+</tyro-ui-data-table>

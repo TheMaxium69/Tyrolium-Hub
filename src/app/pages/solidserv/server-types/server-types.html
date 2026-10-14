@@ -1,0 +1,96 @@
+<tyro-ui-page-header label="SolidServ" [title]="lang() === 'en' ? 'Server types' : 'Types de serveurs'">
+  {{ lang() === 'en'
+    ? 'Strict naming of the fleet: each server is called its type prefix followed by a number (vps201, database701…).'
+    : 'Nommage strict du parc : chaque serveur porte le préfixe de son type suivi d\'un numéro (vps201, database701…).' }}
+</tyro-ui-page-header>
+
+<div class="st-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert type="danger" [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load server types from Tyrolium API.' : 'Impossible de charger les types depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  @if (formId() !== null) {
+    <tyro-ui-bento-card [icon]="formId() === 0 ? 'ri-add-line' : 'ri-pencil-line'" label="SolidServ"
+      [title]="formId() === 0 ? (lang() === 'en' ? 'New type' : 'Nouveau type') : (lang() === 'en' ? 'Edit type' : 'Modifier le type')">
+      <form class="st-form" (submit)="save($event)">
+        <div class="st-fields">
+          <tyro-ui-text-field [label]="lang() === 'en' ? 'Name' : 'Nom'" placeholder="VPS" [value]="form.name" [disabled]="saving()" (valueChange)="form.name = $event"></tyro-ui-text-field>
+          <tyro-ui-text-field [label]="lang() === 'en' ? 'Abbreviation' : 'Abréviation'" placeholder="vps" [value]="form.abbreviation" [disabled]="saving()" (valueChange)="form.abbreviation = $event"></tyro-ui-text-field>
+          <tyro-ui-text-field [label]="lang() === 'en' ? 'Name prefix (empty = abbreviation)' : 'Préfixe de nom (vide = abréviation)'" [placeholder]="form.abbreviation || 'vps'" [value]="form.namePrefix" [disabled]="saving()" (valueChange)="form.namePrefix = $event"></tyro-ui-text-field>
+        </div>
+        <tyro-ui-text-field [label]="lang() === 'en' ? 'Description (optional)' : 'Description (facultative)'" [value]="form.description" [disabled]="saving()" (valueChange)="form.description = $event"></tyro-ui-text-field>
+        @if (formId()) {
+          <p class="st-hint">
+            {{ lang() === 'en'
+              ? 'The name prefix cannot change while servers use this type.'
+              : 'Le préfixe de nom ne peut plus changer tant que des serveurs utilisent ce type.' }}
+          </p>
+        }
+        @if (formError(); as error) {
+          <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+        }
+        <div class="st-actions">
+          <tyro-ui-button variant="ghost" [disabled]="saving()" (clicked)="closeForm()">{{ lang() === 'en' ? 'Cancel' : 'Annuler' }}</tyro-ui-button>
+          <tyro-ui-button type="submit" variant="gradient" icon="ri-check-line" [disabled]="saving()">
+            {{ saving() ? (lang() === 'en' ? 'Saving…' : 'Enregistrement…') : (formId() === 0 ? (lang() === 'en' ? 'Create type' : 'Créer le type') : (lang() === 'en' ? 'Save' : 'Enregistrer')) }}
+          </tyro-ui-button>
+        </div>
+      </form>
+    </tyro-ui-bento-card>
+  }
+
+  <tyro-ui-bento-card icon="ri-stack-line" label="SolidServ" [title]="lang() === 'en' ? 'Types' : 'Types'">
+
+    @if (service.canType('create') && formId() === null) {
+      <div tyro-header-action>
+        <tyro-ui-button size="sm" icon="ri-add-line" (clicked)="openCreate()">{{ lang() === 'en' ? 'New type' : 'Nouveau type' }}</tyro-ui-button>
+      </div>
+    }
+
+    @if (loading()) {
+      <tyro-ui-skeleton height="44px" [count]="5"></tyro-ui-skeleton>
+    } @else if (!rows().length) {
+      <p class="st-empty">{{ lang() === 'en' ? 'No type.' : 'Aucun type.' }}</p>
+    } @else {
+      <tyro-ui-data-table [columns]="columns()" [data]="rows()" [searchable]="true">
+
+        <ng-template tyroCol="name" let-row>
+          <strong class="st-name">{{ $any(row).type.name }}</strong>
+          @if ($any(row).type.description) { <span class="st-muted">{{ $any(row).type.description }}</span> }
+        </ng-template>
+
+        <ng-template tyroCol="abbreviation" let-row>
+          <code class="st-code">{{ $any(row).type.abbreviation }}</code>
+        </ng-template>
+
+        <ng-template tyroCol="namePrefix" let-row>
+          <code class="st-code">{{ $any(row).type.namePrefix }}<span class="st-muted">201</span></code>
+          @if ($any(row).type.namePrefix !== $any(row).type.abbreviation) {
+            <i class="ri-information-line st-diff" [title]="lang() === 'en' ? 'Prefix differs from the abbreviation' : 'Préfixe différent de l\'abréviation'"></i>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="servers" let-row>
+          <strong>{{ servers($any(row).type) }}</strong>
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <span class="st-row-actions">
+            @if (service.canType('update')) {
+              <tyro-ui-button size="sm" variant="ghost" icon="ri-pencil-line" (clicked)="openEdit($any(row).type)"></tyro-ui-button>
+            }
+            @if (service.canType('delete')) {
+              <tyro-ui-button size="sm" variant="ghost" icon="ri-delete-bin-line" (clicked)="remove($any(row).type)"></tyro-ui-button>
+            }
+          </span>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+</div>

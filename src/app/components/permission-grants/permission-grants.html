@@ -1,0 +1,62 @@
+@if (!grants().length) {
+  <p class="pg-empty">{{ lang() === 'en' ? 'No permission granted.' : 'Aucune permission accordée.' }}</p>
+} @else {
+  <ul class="pg-list">
+    @for (grant of grants(); track grant.id) {
+      <li class="pg-item">
+        <div class="pg-main">
+          <strong class="pg-label">
+            @if (implied(grant).length) { <i class="ri-umbrella-line" [title]="lang() === 'en' ? 'Umbrella permission' : 'Permission parapluie'"></i> }
+            {{ grant.permission?.label }}
+          </strong>
+          <code class="pg-code">{{ grant.permission?.name }}</code>
+          @if (implied(grant).length) {
+            <div class="pg-implied">
+              <span class="pg-implied-label">{{ lang() === 'en' ? 'Also grants' : 'Inclut aussi' }}</span>
+              @for (sub of implied(grant); track sub.id) {
+                <tyro-ui-chip size="sm" icon="ri-corner-down-right-line">{{ sub.label }}</tyro-ui-chip>
+              }
+            </div>
+          }
+        </div>
+        <div class="pg-side">
+          <app-hub-user [user]="grant.grantedBy"></app-hub-user>
+          <span class="pg-date">{{ date(grant.grantedAt) }}</span>
+        </div>
+        @if (editable()) {
+          <tyro-ui-button size="sm" variant="ghost" icon="ri-delete-bin-line" [disabled]="busy()" (clicked)="removed.emit(grant)"></tyro-ui-button>
+        }
+      </li>
+    }
+  </ul>
+}
+
+@if (editable()) {
+  <div class="pg-add">
+    <span class="pg-add-label">{{ lang() === 'en' ? 'Grant a permission' : 'Accorder une permission' }}</span>
+    <div class="pg-add-row">
+      <tyro-ui-select
+        class="pg-select"
+        [items]="items()"
+        [value]="selectedId()"
+        [placeholder]="items().length ? (lang() === 'en' ? 'Choose a permission' : 'Choisir une permission') : (lang() === 'en' ? 'All permissions granted' : 'Toutes les permissions sont accordées')"
+        [disabled]="busy() || !items().length"
+        (valueChange)="selectedId.set($event)">
+      </tyro-ui-select>
+      <tyro-ui-button icon="ri-add-line" [disabled]="busy() || !selected()" (clicked)="submit()">
+        {{ lang() === 'en' ? 'Grant' : 'Accorder' }}
+      </tyro-ui-button>
+    </div>
+    @if (selected()?.impliedPermissions?.length) {
+      <div class="pg-implied pg-implied--preview">
+        <span class="pg-implied-label">
+          <i class="ri-umbrella-line"></i>
+          {{ lang() === 'en' ? 'Umbrella: also grants' : 'Parapluie : donne aussi' }}
+        </span>
+        @for (sub of selected()!.impliedPermissions; track sub.id) {
+          <tyro-ui-chip size="sm" variant="accent">{{ sub.label }}</tyro-ui-chip>
+        }
+      </div>
+    }
+  </div>
+}

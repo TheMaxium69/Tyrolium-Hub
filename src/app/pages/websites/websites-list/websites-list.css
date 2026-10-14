@@ -1,0 +1,85 @@
+.wl-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.wl-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.wl-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--dash-text);
+  line-height: 1.1;
+}
+
+.wl-renew {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 1.5rem;
+}
+
+.wl-expiring {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.wl-expiring-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: var(--dash-bg);
+  box-shadow: var(--shadow-inset);
+}
+
+.wl-expiring-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wl-expiring-main strong,
+.wl-domain {
+  display: block;
+  color: var(--dash-text);
+}
+
+.wl-muted {
+  font-size: 0.8rem;
+  color: var(--dash-text-2);
+}
+
+.wl-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.wl-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.wl-status-filter { width: 200px; }
+
+.wl-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--dash-text-muted);
+}

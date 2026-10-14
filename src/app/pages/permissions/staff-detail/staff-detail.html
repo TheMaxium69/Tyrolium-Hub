@@ -1,0 +1,104 @@
+<div class="sd-back">
+  <tyro-ui-button size="sm" variant="ghost" icon="ri-arrow-left-line" (clicked)="back()">Permissions</tyro-ui-button>
+</div>
+
+@if (notFound()) {
+  <tyro-ui-alert type="warning" [closable]="false"
+    [title]="lang() === 'en' ? 'User not found' : 'Utilisateur introuvable'"
+    [message]="lang() === 'en' ? 'This account does not exist.' : 'Ce compte n\'existe pas.'">
+  </tyro-ui-alert>
+} @else if (loadError()) {
+  <tyro-ui-alert type="danger" [closable]="false"
+    [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+    [message]="lang() === 'en' ? 'Unable to load this account from Tyrolium API.' : 'Impossible de charger ce compte depuis l\'API Tyrolium.'">
+  </tyro-ui-alert>
+} @else if (loading() || !user()) {
+  <tyro-ui-skeleton width="320px" height="56px"></tyro-ui-skeleton>
+  <div class="sd-page"><tyro-ui-skeleton height="200px" [count]="2"></tyro-ui-skeleton></div>
+} @else {
+  @let u = user()!;
+
+  <header class="sd-header">
+    <tyro-ui-avatar [src]="avatar()" [name]="name()" size="lg"></tyro-ui-avatar>
+    <div class="sd-header-text">
+      <span class="sd-label">Useritium #{{ u.id }} · &#64;{{ u.username }}</span>
+      <h1 class="sd-title">{{ name() }}</h1>
+      <app-access-level [level]="u.accessLevel" [banned]="!!u.bannedAt"></app-access-level>
+    </div>
+  </header>
+
+  <div class="sd-page">
+
+    @if (isOwner()) {
+      <tyro-ui-alert type="info" [closable]="false"
+        [title]="lang() === 'en' ? 'Owner account' : 'Compte owner'"
+        [message]="lang() === 'en'
+          ? 'The owner has every permission and can never be modified through the API.'
+          : 'Le owner a toutes les permissions et ne peut jamais être modifié via l\'API.'">
+      </tyro-ui-alert>
+    } @else {
+
+      @if (!isInterne()) {
+        <tyro-ui-alert type="warning" [closable]="false"
+          [title]="lang() === 'en' ? 'No internal access' : 'Pas d\'accès interne'"
+          [message]="lang() === 'en'
+            ? 'This account cannot sign in to the Hub. Its permissions are kept and apply again if internal access is restored.'
+            : 'Ce compte ne peut pas se connecter au Hub. Ses permissions sont conservées et s\'appliquent de nouveau si l\'accès interne est rétabli.'">
+        </tyro-ui-alert>
+      }
+
+      <div class="sd-grid">
+        <!-- ── Permissions accordées ─────────────────────── -->
+        <tyro-ui-bento-card icon="ri-key-2-line" [label]="lang() === 'en' ? 'Granted directly' : 'Accordées directement'" title="Permissions">
+          <app-permission-grants
+            [grants]="grants()"
+            [catalog]="catalog()"
+            [editable]="isInterne()"
+            [busy]="busy()"
+            (granted)="grant($event)"
+            (removed)="remove($event)">
+          </app-permission-grants>
+        </tyro-ui-bento-card>
+
+        <!-- ── Droits effectifs ──────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-shield-check-line" [label]="lang() === 'en' ? 'Including umbrellas' : 'Parapluies compris'" [title]="lang() === 'en' ? 'Effective rights' : 'Droits effectifs'">
+          @if (!isInterne()) {
+            <p class="sd-hint">{{ lang() === 'en' ? 'None while the account is not internal.' : 'Aucun tant que le compte n\'est pas interne.' }}</p>
+          } @else if (!effective().length) {
+            <p class="sd-hint">{{ lang() === 'en' ? 'No right: the Hub only shows the home page.' : 'Aucun droit : le Hub n\'affiche que l\'accueil.' }}</p>
+          } @else {
+            <div class="sd-chips">
+              @for (right of effective(); track right.role) {
+                <tyro-ui-chip size="sm" variant="success" icon="ri-check-line" [title]="right.role">{{ right.label }}</tyro-ui-chip>
+              }
+            </div>
+          }
+        </tyro-ui-bento-card>
+      </div>
+
+      <!-- ── Accès interne ────────────────────────────────── -->
+      <tyro-ui-bento-card icon="ri-door-lock-line" [label]="lang() === 'en' ? 'Hub' : 'Hub'" [title]="lang() === 'en' ? 'Internal access' : 'Accès interne'">
+        <div class="sd-access">
+          @if (isInterne()) {
+            <p class="sd-hint">
+              {{ lang() === 'en'
+                ? 'Removing internal access closes every session of this account. Its permissions are kept.'
+                : 'Retirer l\'accès interne ferme toutes les sessions de ce compte. Ses permissions sont conservées.' }}
+            </p>
+            <tyro-ui-button variant="ghost" icon="ri-shield-cross-line" [disabled]="busy()" (clicked)="revokeInterne()">
+              {{ lang() === 'en' ? 'Remove internal access' : 'Retirer l\'accès interne' }}
+            </tyro-ui-button>
+          } @else {
+            <p class="sd-hint">
+              {{ lang() === 'en' ? 'Restoring access reapplies the kept permissions.' : 'Rétablir l\'accès réapplique les permissions conservées.' }}
+            </p>
+            <tyro-ui-button variant="gradient" icon="ri-shield-check-line" [disabled]="busy()" (clicked)="grantInterne()">
+              {{ lang() === 'en' ? 'Restore internal access' : 'Rétablir l\'accès interne' }}
+            </tyro-ui-button>
+          }
+        </div>
+      </tyro-ui-bento-card>
+    }
+
+  </div>
+}

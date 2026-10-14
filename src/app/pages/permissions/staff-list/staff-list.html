@@ -1,0 +1,86 @@
+<tyro-ui-page-header label="Tyrolium · Owner" title="Permissions">
+  {{ lang() === 'en'
+    ? 'Internal staff of the Hub and their permissions. Only the owner can manage them.'
+    : 'Personnel interne du Hub et ses permissions. Seul le owner peut les gérer.' }}
+</tyro-ui-page-header>
+
+<div class="sl-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert
+      type="danger"
+      [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load the staff from Tyrolium API.' : 'Impossible de charger le personnel depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  <tyro-ui-bento-card icon="ri-shield-user-line" [label]="lang() === 'en' ? 'Internal & owner' : 'Interne et owner'" [title]="lang() === 'en' ? 'Staff' : 'Personnel'">
+
+    <div tyro-header-action>
+      <tyro-ui-button size="sm" [variant]="addOpen() ? 'ghost' : 'classic'" [icon]="addOpen() ? 'ri-close-line' : 'ri-user-add-line'" (clicked)="toggleAdd()">
+        {{ addOpen()
+          ? (lang() === 'en' ? 'Cancel' : 'Annuler')
+          : (lang() === 'en' ? 'Add a member' : 'Ajouter un membre') }}
+      </tyro-ui-button>
+    </div>
+
+    @if (addOpen()) {
+      <div class="sl-add">
+        <span class="sl-add-label">
+          {{ lang() === 'en' ? 'Give internal access to a Useritium account' : 'Donner l\'accès interne à un compte Useritium' }}
+        </span>
+        @if (addLoading()) {
+          <tyro-ui-skeleton height="40px"></tyro-ui-skeleton>
+        } @else {
+          <div class="sl-add-row">
+            <tyro-ui-select
+              class="sl-select"
+              [items]="candidateItems()"
+              [value]="candidateId()"
+              [placeholder]="lang() === 'en' ? 'Choose an account' : 'Choisir un compte'"
+              [disabled]="busy()"
+              (valueChange)="candidateId.set($event)">
+            </tyro-ui-select>
+            <tyro-ui-button variant="gradient" icon="ri-shield-check-line" [disabled]="busy() || !candidateId()" (clicked)="promote()">
+              {{ lang() === 'en' ? 'Give access' : 'Donner l\'accès' }}
+            </tyro-ui-button>
+          </div>
+        }
+      </div>
+    }
+
+    @if (loading()) {
+      <tyro-ui-skeleton height="44px" [count]="4"></tyro-ui-skeleton>
+    } @else if (!rows().length) {
+      <p class="sl-empty">{{ lang() === 'en' ? 'No internal account.' : 'Aucun compte interne.' }}</p>
+    } @else {
+      <tyro-ui-data-table [columns]="columns" [data]="rows()" [searchable]="true" [paginated]="true" [pageSize]="20">
+
+        <ng-template tyroCol="username" let-row>
+          <app-hub-user [user]="$any(row).user"></app-hub-user>
+        </ng-template>
+
+        <ng-template tyroCol="accessLevel" let-row>
+          <app-access-level [level]="$any(row).user.accessLevel" [banned]="!!$any(row).user.bannedAt"></app-access-level>
+        </ng-template>
+
+        <ng-template tyroCol="perms" let-row>
+          @if ($any(row).user.accessLevel === 'owner') {
+            <span class="sl-muted">{{ lang() === 'en' ? 'All' : 'Tous' }}</span>
+          } @else {
+            <strong>{{ $any(row).permsCount }}</strong>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <tyro-ui-button size="sm" variant="lite" iconRight="ri-arrow-right-line" (clicked)="open($any(row).id)">
+            {{ $any(row).user.accessLevel === 'owner' ? (lang() === 'en' ? 'Open' : 'Voir') : (lang() === 'en' ? 'Manage' : 'Gérer') }}
+          </tyro-ui-button>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+</div>

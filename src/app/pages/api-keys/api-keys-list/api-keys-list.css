@@ -1,0 +1,94 @@
+.ak-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ak-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.ak-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--dash-text);
+  line-height: 1.1;
+}
+
+.ak-reveal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ak-secret {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  background: var(--dash-bg);
+  box-shadow: var(--shadow-inset);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.9rem;
+  color: var(--dash-text);
+  word-break: break-all;
+  white-space: pre-wrap;
+  user-select: all;
+}
+
+.ak-reveal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ak-create {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.ak-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.ak-options {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ak-option-label {
+  font-size: 0.85rem;
+  color: var(--dash-text-2);
+}
+
+.ak-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ak-name {
+  display: block;
+  color: var(--dash-text);
+}
+
+.ak-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--dash-text-2);
+}
+
+.ak-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--dash-text-muted);
+}

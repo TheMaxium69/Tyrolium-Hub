@@ -1,0 +1,81 @@
+<div class="kd-back">
+  <tyro-ui-button size="sm" variant="ghost" icon="ri-arrow-left-line" (clicked)="back()">
+    {{ lang() === 'en' ? 'API keys' : 'Clés API' }}
+  </tyro-ui-button>
+</div>
+
+@if (notFound()) {
+  <tyro-ui-alert type="warning" [closable]="false"
+    [title]="lang() === 'en' ? 'Key not found' : 'Clé introuvable'"
+    [message]="lang() === 'en' ? 'This API key does not exist.' : 'Cette clé API n\'existe pas.'">
+  </tyro-ui-alert>
+} @else if (loadError()) {
+  <tyro-ui-alert type="danger" [closable]="false"
+    [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+    [message]="lang() === 'en' ? 'Unable to load this key from Tyrolium API.' : 'Impossible de charger cette clé depuis l\'API Tyrolium.'">
+  </tyro-ui-alert>
+} @else if (loading() || !key()) {
+  <tyro-ui-skeleton width="320px" height="48px"></tyro-ui-skeleton>
+  <div class="kd-page"><tyro-ui-skeleton height="200px" [count]="2"></tyro-ui-skeleton></div>
+} @else {
+  @let k = key()!;
+
+  <tyro-ui-page-header [label]="k.keyPreview" [title]="k.label">
+    <span class="kd-header-meta">
+      <app-api-key-status [environment]="k.environment" [status]="status()"></app-api-key-status>
+      @if (k.content) { <span>{{ k.content }}</span> }
+    </span>
+  </tyro-ui-page-header>
+
+  <div class="kd-page">
+
+    @if (!active()) {
+      <tyro-ui-alert type="warning" [closable]="false"
+        [title]="status() === 'revoked' ? (lang() === 'en' ? 'Revoked key' : 'Clé révoquée') : (lang() === 'en' ? 'Expired key' : 'Clé expirée')"
+        [message]="lang() === 'en'
+          ? 'This key no longer works. Its permissions are shown for history only.'
+          : 'Cette clé ne fonctionne plus. Ses permissions sont affichées pour l\'historique uniquement.'">
+      </tyro-ui-alert>
+    }
+
+    <div class="kd-grid">
+      <tyro-ui-bento-card icon="ri-shield-keyhole-line" [label]="lang() === 'en' ? 'Only these' : 'Uniquement celles-ci'" title="Permissions">
+        <app-permission-grants
+          [grants]="k.permissions"
+          [catalog]="catalog()"
+          [editable]="active()"
+          [busy]="busy()"
+          (granted)="grant($event)"
+          (removed)="remove($event)">
+        </app-permission-grants>
+      </tyro-ui-bento-card>
+
+      <tyro-ui-bento-card icon="ri-information-line" [label]="lang() === 'en' ? 'Key' : 'Clé'" title="Informations">
+        <dl class="kd-meta">
+          <dt>{{ lang() === 'en' ? 'Usage' : 'Utilisation' }}</dt>
+          <dd><code class="kd-code">X-Api-Key: {{ k.keyPreview }}</code></dd>
+          <dt>{{ lang() === 'en' ? 'Created' : 'Créée le' }}</dt>
+          <dd>{{ date(k.createdAt) }}</dd>
+          <dt>{{ lang() === 'en' ? 'By' : 'Par' }}</dt>
+          <dd><app-hub-user [user]="k.createdBy"></app-hub-user></dd>
+          <dt>{{ lang() === 'en' ? 'Expires' : 'Expire le' }}</dt>
+          <dd>{{ date(k.expiresAt) }}</dd>
+          @if (k.revokedAt) {
+            <dt>{{ lang() === 'en' ? 'Revoked' : 'Révoquée le' }}</dt>
+            <dd>{{ date(k.revokedAt) }}</dd>
+          }
+        </dl>
+
+        @if (!k.revokedAt) {
+          <div class="kd-danger">
+            <tyro-ui-button variant="ghost" icon="ri-forbid-line" [disabled]="busy()" (clicked)="revoke()">
+              {{ lang() === 'en' ? 'Revoke the key' : 'Révoquer la clé' }}
+            </tyro-ui-button>
+            <span class="kd-hint">{{ lang() === 'en' ? 'Immediate and irreversible.' : 'Immédiat et irréversible.' }}</span>
+          </div>
+        }
+      </tyro-ui-bento-card>
+    </div>
+
+  </div>
+}

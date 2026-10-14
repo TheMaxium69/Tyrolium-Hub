@@ -1,0 +1,62 @@
+.st-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.st-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.st-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.st-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.st-name {
+  display: block;
+  color: var(--dash-text);
+}
+
+.st-code {
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.85rem;
+  color: var(--dash-text);
+}
+
+.st-muted {
+  font-size: 0.8rem;
+  color: var(--dash-text-muted);
+}
+
+.st-diff {
+  margin-left: 0.35rem;
+  color: var(--dash-text-2);
+}
+
+.st-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--dash-text-muted);
+}
+
+.st-row-actions {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.st-empty {
+  margin: 0;
+  padding: 1.5rem 0;
+  text-align: center;
+  color: var(--dash-text-muted);
+}

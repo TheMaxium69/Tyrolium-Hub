@@ -1,0 +1,136 @@
+<tyro-ui-page-header label="SolidServ" title="Dashboard">
+  {{ lang() === 'en'
+    ? 'Server fleet: client servers (based on a SolidServ product) and internal servers.'
+    : 'Parc de serveurs : serveurs clients (sur un produit SolidServ) et serveurs internes.' }}
+</tyro-ui-page-header>
+
+<div class="ss-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert type="danger" [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load the fleet from Tyrolium API.' : 'Impossible de charger le parc depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  <!-- ── Vue d'ensemble ─────────────────────────────────── -->
+  <div class="ss-stats">
+    <tyro-ui-bento-card size="small" icon="ri-server-line" [label]="lang() === 'en' ? 'Servers' : 'Serveurs'">
+      @if (stats(); as s) { <span class="ss-value">{{ s.total }}</span> } @else { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-checkbox-circle-line" [label]="lang() === 'en' ? 'Active' : 'Actifs'">
+      @if (stats(); as s) { <span class="ss-value">{{ s.byStatus.active }}</span> } @else { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-user-star-line" label="Clients">
+      @if (stats(); as s) { <span class="ss-value">{{ s.withClient }}</span> } @else { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-building-line" [label]="lang() === 'en' ? 'Internal' : 'Internes'">
+      @if (stats(); as s) { <span class="ss-value">{{ s.internal }}</span> } @else { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> }
+    </tyro-ui-bento-card>
+  </div>
+
+  @if (stats(); as s) {
+    @if (s.byStatus.provisioning || s.byStatus.maintenance || s.byStatus.suspended) {
+      <div class="ss-status-strip">
+        @if (s.byStatus.provisioning) { <tyro-ui-chip variant="accent" icon="ri-loader-4-line">{{ s.byStatus.provisioning }} {{ lang() === 'en' ? 'provisioning' : 'en création' }}</tyro-ui-chip> }
+        @if (s.byStatus.maintenance)  { <tyro-ui-chip variant="warning" icon="ri-tools-line">{{ s.byStatus.maintenance }} {{ lang() === 'en' ? 'in maintenance' : 'en maintenance' }}</tyro-ui-chip> }
+        @if (s.byStatus.suspended)    { <tyro-ui-chip variant="danger" icon="ri-pause-circle-line">{{ s.byStatus.suspended }} {{ lang() === 'en' ? 'suspended' : (s.byStatus.suspended > 1 ? 'suspendus' : 'suspendu') }}</tyro-ui-chip> }
+        @if (s.byStatus.decommissioned) { <tyro-ui-chip icon="ri-archive-line">{{ s.byStatus.decommissioned }} {{ lang() === 'en' ? 'decommissioned' : (s.byStatus.decommissioned > 1 ? 'décommissionnés' : 'décommissionné') }}</tyro-ui-chip> }
+      </div>
+    }
+  }
+
+  <div class="ss-grid">
+    <tyro-ui-bento-card icon="ri-bar-chart-2-line" [label]="lang() === 'en' ? 'Fleet' : 'Parc'" [title]="lang() === 'en' ? 'Servers per type' : 'Serveurs par type'">
+      @if (loading()) {
+        <tyro-ui-skeleton height="200px"></tyro-ui-skeleton>
+      } @else {
+        <div class="ss-chart">
+          <tyro-ui-bar-chart [items]="typeChart()" [height]="200" [valueLabel]="lang() === 'en' ? 'servers' : 'serveurs'"></tyro-ui-bar-chart>
+        </div>
+      }
+    </tyro-ui-bento-card>
+
+    <tyro-ui-bento-card icon="ri-folder-line" [label]="lang() === 'en' ? 'Fleet' : 'Parc'" [title]="lang() === 'en' ? 'Per project' : 'Par projet'">
+      @if (loading()) {
+        <tyro-ui-skeleton height="28px" [count]="5"></tyro-ui-skeleton>
+      } @else if (!projects().length) {
+        <p class="ss-empty">{{ lang() === 'en' ? 'No server.' : 'Aucun serveur.' }}</p>
+      } @else {
+        <ul class="ss-projects">
+          @for (p of projects(); track p.project) {
+            <li>
+              <span [class.ss-muted]="!p.project">{{ p.project ?? (lang() === 'en' ? 'No project' : 'Sans projet') }}</span>
+              <strong>{{ p.servers }}</strong>
+            </li>
+          }
+        </ul>
+      }
+    </tyro-ui-bento-card>
+  </div>
+
+  <!-- ── Parc ───────────────────────────────────────────── -->
+  <tyro-ui-bento-card icon="ri-server-line" label="SolidServ" [title]="lang() === 'en' ? 'Servers' : 'Serveurs'">
+
+    @if (service.canServer('create')) {
+      <div tyro-header-action>
+        <tyro-ui-button size="sm" icon="ri-add-line" (clicked)="open('nouveau')">{{ lang() === 'en' ? 'New server' : 'Nouveau serveur' }}</tyro-ui-button>
+      </div>
+    }
+
+    <div class="ss-filters">
+      <tyro-ui-button-group size="sm" [items]="clientItems()" [value]="clientFilter()" (valueChange)="clientFilter.set($any($event))"></tyro-ui-button-group>
+      <tyro-ui-select class="ss-filter" [items]="typeItems()" [value]="typeFilter()" (valueChange)="typeFilter.set($event)"></tyro-ui-select>
+      <tyro-ui-select class="ss-filter" [items]="statusItems()" [value]="statusFilter()" (valueChange)="statusFilter.set($event)"></tyro-ui-select>
+    </div>
+
+    @if (loading()) {
+      <tyro-ui-skeleton height="48px" [count]="6"></tyro-ui-skeleton>
+    } @else if (!rows().length) {
+      <p class="ss-empty">{{ lang() === 'en' ? 'No server.' : 'Aucun serveur.' }}</p>
+    } @else {
+      <tyro-ui-data-table [columns]="columns" [data]="rows()" [searchable]="true" [paginated]="true" [pageSize]="20">
+
+        <ng-template tyroCol="name" let-row>
+          @let s = $any(row).server;
+          <strong class="ss-name">{{ s.name }}@if (s.alias) { <span class="ss-alias">&nbsp;· {{ s.alias }}</span> }</strong>
+          @if (s.hostname || s.location) {
+            <span class="ss-muted">{{ s.hostname }}@if (s.hostname && s.location) { · }{{ s.location }}</span>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="type" let-row>
+          <tyro-ui-chip size="sm" icon="ri-stack-line">{{ $any(row).server.type.name }}</tyro-ui-chip>
+        </ng-template>
+
+        <ng-template tyroCol="owner" let-row>
+          @let s = $any(row).server;
+          @if (!s.hasClient) {
+            <tyro-ui-chip size="sm" icon="ri-building-line">{{ lang() === 'en' ? 'Internal' : 'Interne' }}</tyro-ui-chip>
+          } @else {
+            <span class="ss-owner">
+              @if (s.user) { <app-hub-user [user]="s.user"></app-hub-user> } @else { <strong>{{ s.clientName }}</strong> }
+              @if (s.product) { <tyro-ui-chip size="sm" icon="ri-shopping-bag-3-line">{{ s.product.displayName }}</tyro-ui-chip> }
+            </span>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="project" let-row>
+          <span [class.ss-muted]="!$any(row).server.project">{{ $any(row).server.project || '-' }}</span>
+        </ng-template>
+
+        <ng-template tyroCol="status" let-row>
+          <app-server-status [status]="$any(row).server.status"></app-server-status>
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <tyro-ui-button size="sm" variant="lite" iconRight="ri-arrow-right-line" (clicked)="open($any(row).id)">
+            {{ lang() === 'en' ? 'Open' : 'Voir' }}
+          </tyro-ui-button>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+</div>

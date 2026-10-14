@@ -45,10 +45,7 @@ export class App {
 
     const categorized = HUB_CATEGORIES.map(c => c.group);
     for (const s of visible.filter(s => !categorized.includes(s.group))) {
-      items.push({
-        label: label(s), icon: s.icon, link: `/${s.path}`,
-        ...(s.group === 'solidserv' ? { iconImg: 'assets/tyrolium-ui/projects/SolidServ.png' } : {}),
-      });
+      items.push({ label: label(s), icon: s.icon, link: `/${s.path}` });
     }
 
     return items;
@@ -58,8 +55,9 @@ export class App {
     // Droits relus en cours de session (après un 403) : le guard ne rejoue pas sur la page affichée.
     effect(() => {
       if (!this.auth.access()) return;
-      const path    = this.router.url.split(/[?#]/)[0].split('/')[1];
-      const section = HUB_SECTIONS.find(s => s.path === path);
+      // Les chemins de section peuvent avoir plusieurs segments (ex. solidserv/produits).
+      const url     = this.router.url.split(/[?#]/)[0];
+      const section = HUB_SECTIONS.find(s => url === `/${s.path}` || url.startsWith(`/${s.path}/`));
       if (section && !this.auth.hasRole(section.role)) this.router.navigateByUrl('/403');
     });
   }

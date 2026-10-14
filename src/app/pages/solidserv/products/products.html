@@ -1,0 +1,186 @@
+<tyro-ui-page-header label="SolidServ" [title]="lang() === 'en' ? 'Products' : 'Produits'">
+  {{ lang() === 'en'
+    ? 'SolidServ catalogue: servers and storage sold to clients (the Dashboard will list what each client has bought).'
+    : 'Catalogue SolidServ : serveurs et stockage vendus aux clients (le Dashboard listera ce que chaque client a acheté).' }}
+</tyro-ui-page-header>
+
+<div class="sp-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert type="danger" [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load products from Tyrolium API.' : 'Impossible de charger les produits depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  <div class="sp-stats">
+    <tyro-ui-bento-card size="small" icon="ri-server-line" [label]="lang() === 'en' ? 'Products' : 'Produits'">
+      @if (loading()) { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> } @else { <span class="sp-value">{{ counts().total }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-checkbox-circle-line" [label]="lang() === 'en' ? 'Active' : 'Actifs'">
+      @if (loading()) { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> } @else { <span class="sp-value">{{ counts().active }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-inbox-unarchive-line" [label]="lang() === 'en' ? 'Out of stock (active)' : 'En rupture (actifs)'">
+      @if (loading()) { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> } @else { <span class="sp-value">{{ counts().outOfStock }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-magic-line" [label]="lang() === 'en' ? 'Custom' : 'Sur mesure'">
+      @if (loading()) { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> } @else { <span class="sp-value">{{ counts().custom }}</span> }
+    </tyro-ui-bento-card>
+  </div>
+
+  <!-- ── Formulaire ─────────────────────────────────────── -->
+  @if (formId() !== null) {
+    <tyro-ui-bento-card
+      [icon]="formId() === 0 ? 'ri-add-line' : 'ri-pencil-line'"
+      label="SolidServ"
+      [title]="formId() === 0 ? (lang() === 'en' ? 'New product' : 'Nouveau produit') : (lang() === 'en' ? 'Edit product' : 'Modifier le produit')">
+      <form class="sp-form" (submit)="save($event)">
+
+        <div class="sp-fields">
+          <tyro-ui-text-field [label]="lang() === 'en' ? 'Name' : 'Nom'" placeholder="VPS Start" [value]="form.displayName" [disabled]="saving()" (valueChange)="form.displayName = $event"></tyro-ui-text-field>
+          <tyro-ui-text-field [label]="lang() === 'en' ? 'Tag (unique)' : 'Tag (unique)'" placeholder="vps_start_1" [value]="form.tagName" [disabled]="saving()" (valueChange)="form.tagName = $event"></tyro-ui-text-field>
+          <tyro-ui-text-field type="number" [label]="lang() === 'en' ? 'Position' : 'Position'" [value]="form.position" [disabled]="saving()" (valueChange)="form.position = $event"></tyro-ui-text-field>
+        </div>
+
+        <tyro-ui-text-field [label]="lang() === 'en' ? 'Description (optional)' : 'Description (facultative)'" [value]="form.description" [disabled]="saving()" (valueChange)="form.description = $event"></tyro-ui-text-field>
+
+        <span class="sp-section">{{ lang() === 'en' ? 'Resources (optional)' : 'Ressources (facultatif)' }}</span>
+        <div class="sp-fields">
+          <tyro-ui-text-field type="number" [label]="lang() === 'en' ? 'CPU cores' : 'Cœurs CPU'" [value]="form.cpuCores" [disabled]="saving()" (valueChange)="form.cpuCores = $event"></tyro-ui-text-field>
+          <tyro-ui-text-field type="number" [label]="lang() === 'en' ? 'RAM (MB)' : 'RAM (Mo)'" placeholder="4096" [value]="form.ramMb" [disabled]="saving()" (valueChange)="form.ramMb = $event"></tyro-ui-text-field>
+          <tyro-ui-text-field type="number" [label]="lang() === 'en' ? 'Storage (GB)' : 'Stockage (Go)'" [value]="form.storageGb" [disabled]="saving()" (valueChange)="form.storageGb = $event"></tyro-ui-text-field>
+        </div>
+
+        <span class="sp-section">{{ lang() === 'en' ? 'Pricing & stock' : 'Tarifs et stock' }}</span>
+        <div class="sp-fields">
+          <tyro-ui-text-field [label]="lang() === 'en' ? 'Monthly price excl. VAT (€)' : 'Prix mensuel HT (€)'" placeholder="9,99" [value]="form.priceMonthly" [disabled]="saving()" (valueChange)="form.priceMonthly = $event"></tyro-ui-text-field>
+          <tyro-ui-text-field [label]="lang() === 'en' ? 'Yearly price excl. VAT (€)' : 'Prix annuel HT (€)'" placeholder="99,90" [value]="form.priceYearly" [disabled]="saving()" (valueChange)="form.priceYearly = $event"></tyro-ui-text-field>
+          <tyro-ui-text-field type="number" [label]="lang() === 'en' ? 'Stock (empty = unlimited)' : 'Stock (vide = illimité)'" [value]="form.stock" [disabled]="saving()" (valueChange)="form.stock = $event"></tyro-ui-text-field>
+        </div>
+
+        <div class="sp-options">
+          <div class="sp-option">
+            <span class="sp-option-label">{{ lang() === 'en' ? 'Visibility' : 'Visibilité' }}</span>
+            <tyro-ui-button-group size="sm" [items]="visibilityItems()" [value]="form.visibility" (valueChange)="form.visibility = $any($event)"></tyro-ui-button-group>
+          </div>
+          @if (service.canPickOffre()) {
+            <div class="sp-option sp-option--grow">
+              <span class="sp-option-label">{{ lang() === 'en' ? 'Tyrolium offer' : 'Offre Tyrolium' }}</span>
+              <tyro-ui-select class="sp-select" [items]="offreItems()" [value]="form.offreId" [disabled]="saving()" (valueChange)="form.offreId = $event"></tyro-ui-select>
+            </div>
+          }
+          <tyro-ui-switch [label]="lang() === 'en' ? 'Active product' : 'Produit actif'" [value]="form.isActive" [disabled]="saving()" (valueChange)="form.isActive = $event"></tyro-ui-switch>
+        </div>
+
+        @if (formError(); as error) {
+          <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+        }
+
+        <div class="sp-actions">
+          <tyro-ui-button variant="ghost" [disabled]="saving()" (clicked)="closeForm()">{{ lang() === 'en' ? 'Cancel' : 'Annuler' }}</tyro-ui-button>
+          <tyro-ui-button type="submit" variant="gradient" icon="ri-check-line" [disabled]="saving()">
+            {{ saving()
+              ? (lang() === 'en' ? 'Saving…' : 'Enregistrement…')
+              : (formId() === 0 ? (lang() === 'en' ? 'Create product' : 'Créer le produit') : (lang() === 'en' ? 'Save' : 'Enregistrer')) }}
+          </tyro-ui-button>
+        </div>
+      </form>
+    </tyro-ui-bento-card>
+  }
+
+  <!-- ── Catalogue ──────────────────────────────────────── -->
+  <tyro-ui-bento-card icon="ri-server-line" label="SolidServ" [title]="lang() === 'en' ? 'Catalogue' : 'Catalogue'">
+
+    @if (service.can('create') && formId() === null) {
+      <div tyro-header-action>
+        <tyro-ui-button size="sm" icon="ri-add-line" (clicked)="openCreate()">{{ lang() === 'en' ? 'New product' : 'Nouveau produit' }}</tyro-ui-button>
+      </div>
+    }
+
+    @if (loading()) {
+      <tyro-ui-skeleton height="48px" [count]="5"></tyro-ui-skeleton>
+    } @else if (!rows().length) {
+      <p class="sp-empty">{{ lang() === 'en' ? 'No product yet.' : 'Aucun produit pour l\'instant.' }}</p>
+    } @else {
+      <tyro-ui-data-table [columns]="columns" [data]="rows()" [searchable]="true" [filterable]="true" [paginated]="true" [pageSize]="20">
+
+        <ng-template tyroCol="position" let-row>
+          <span class="sp-muted">{{ $any(row).product.position }}</span>
+        </ng-template>
+
+        <ng-template tyroCol="displayName" let-row>
+          <div [class.sp-disabled]="!$any(row).product.isActive">
+            <strong class="sp-name">{{ $any(row).product.displayName }}</strong>
+            <code class="sp-code">{{ $any(row).product.tagName }}</code>
+            @if ($any(row).product.offre) {
+              <span class="sp-offre"><i class="ri-price-tag-3-line"></i> {{ $any(row).product.offre.displayName }}</span>
+            }
+          </div>
+        </ng-template>
+
+        <ng-template tyroCol="specs" let-row>
+          @let p = $any(row).product;
+          @if (p.cpuCores === null && p.ramMb === null && p.storageGb === null) {
+            <span class="sp-muted">-</span>
+          } @else {
+            <span class="sp-specs">
+              @if (p.cpuCores !== null) { <tyro-ui-chip size="sm" icon="ri-cpu-line">{{ p.cpuCores }} {{ lang() === 'en' ? (p.cpuCores > 1 ? 'cores' : 'core') : (p.cpuCores > 1 ? 'cœurs' : 'cœur') }}</tyro-ui-chip> }
+              @if (p.ramMb !== null) { <tyro-ui-chip size="sm" icon="ri-database-2-line">{{ ram(p.ramMb) }}</tyro-ui-chip> }
+              @if (p.storageGb !== null) { <tyro-ui-chip size="sm" icon="ri-hard-drive-2-line">{{ storage(p.storageGb) }}</tyro-ui-chip> }
+            </span>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="price" let-row>
+          @let p = $any(row).product;
+          @if (p.priceMonthly === null && p.priceYearly === null) {
+            <span class="sp-muted">{{ lang() === 'en' ? 'On quote' : 'Sur devis' }}</span>
+          } @else {
+            <span class="sp-price">
+              @if (p.priceMonthly !== null) { <strong>{{ price(p.priceMonthly) }}<small>/{{ lang() === 'en' ? 'mo' : 'mois' }}</small></strong> }
+              @if (p.priceYearly !== null) { <span class="sp-muted">{{ price(p.priceYearly) }}/{{ lang() === 'en' ? 'yr' : 'an' }}</span> }
+            </span>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="stock" let-row>
+          @let p = $any(row).product;
+          @if (p.stock === null) {
+            <tyro-ui-chip size="sm" icon="ri-infinity-line">{{ lang() === 'en' ? 'Unlimited' : 'Illimité' }}</tyro-ui-chip>
+          } @else if (!p.inStock) {
+            <tyro-ui-chip size="sm" variant="danger" icon="ri-inbox-unarchive-line">{{ lang() === 'en' ? 'Out of stock' : 'Rupture' }}</tyro-ui-chip>
+          } @else {
+            <tyro-ui-chip size="sm" [variant]="p.stock <= 3 ? 'warning' : 'success'" icon="ri-stack-line">{{ p.stock }} {{ lang() === 'en' ? 'left' : (p.stock > 1 ? 'restants' : 'restant') }}</tyro-ui-chip>
+          }
+        </ng-template>
+
+        <ng-template tyroCol="state" let-row>
+          @let p = $any(row).product;
+          <span class="sp-specs">
+            @if (p.isActive) {
+              <tyro-ui-chip size="sm" variant="success" icon="ri-checkbox-circle-line">{{ lang() === 'en' ? 'Active' : 'Actif' }}</tyro-ui-chip>
+            } @else {
+              <tyro-ui-chip size="sm" icon="ri-eye-off-line">{{ lang() === 'en' ? 'Disabled' : 'Désactivé' }}</tyro-ui-chip>
+            }
+            @if (p.visibility === 'custom') {
+              <tyro-ui-chip size="sm" variant="accent" icon="ri-magic-line">{{ lang() === 'en' ? 'Custom' : 'Sur mesure' }}</tyro-ui-chip>
+            }
+          </span>
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <span class="sp-row-actions">
+            @if (service.can('update')) {
+              <tyro-ui-button size="sm" variant="ghost" icon="ri-pencil-line" (clicked)="openEdit($any(row).product)"></tyro-ui-button>
+            }
+            @if (service.can('delete')) {
+              <tyro-ui-button size="sm" variant="ghost" icon="ri-delete-bin-line" (clicked)="remove($any(row).product)"></tyro-ui-button>
+            }
+          </span>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+</div>

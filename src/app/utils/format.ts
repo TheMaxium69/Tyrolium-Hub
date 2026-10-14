@@ -31,3 +31,8 @@ export function parsePrice(input: string): number | null {
 export function priceInput(cents: number | null | undefined): string {
   return cents === null || cents === undefined ? '' : (cents / 100).toFixed(2);
 }
+
+/** Lien de dépôt git accepté par l'API : https://…, ssh://… ou git@hote:chemin. */
+export function isGitRepository(value: string): boolean {
+  return /^(https?:\/\/\S+|ssh:\/\/\S+|git@[^\s:]+:\S+)$/.test(value);
+}

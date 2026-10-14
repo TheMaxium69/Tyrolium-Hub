@@ -1,0 +1,259 @@
+<div class="wf-back">
+  <tyro-ui-button size="sm" variant="ghost" icon="ri-arrow-left-line" (clicked)="back()">
+    {{ lang() === 'en' ? 'Websites' : 'Sites web' }}
+  </tyro-ui-button>
+</div>
+
+@if (notFound()) {
+  <tyro-ui-alert type="warning" [closable]="false"
+    [title]="lang() === 'en' ? 'Website not found' : 'Site introuvable'"
+    [message]="lang() === 'en' ? 'This website does not exist or has been deleted.' : 'Ce site n\'existe pas ou a été supprimé.'">
+  </tyro-ui-alert>
+} @else if (loadError()) {
+  <tyro-ui-alert type="danger" [closable]="false"
+    [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+    [message]="lang() === 'en' ? 'Unable to load data from Tyrolium API.' : 'Impossible de charger les données depuis l\'API Tyrolium.'">
+  </tyro-ui-alert>
+} @else if (loading()) {
+  <tyro-ui-skeleton width="320px" height="48px"></tyro-ui-skeleton>
+  <div class="wf-page"><tyro-ui-skeleton height="220px" [count]="2"></tyro-ui-skeleton></div>
+} @else {
+
+  @if (site(); as s) {
+    <tyro-ui-page-header [label]="s.domainName" [title]="s.name">
+      <span class="wf-header-meta">
+        <app-web-site-status [status]="s.status"></app-web-site-status>
+        <app-web-site-owner [site]="s"></app-web-site-owner>
+        <app-server-link [server]="s.server"></app-server-link>
+        <tyro-ui-button size="sm" variant="lite" icon="ri-external-link-line" (clicked)="service.launch(s)">
+          {{ lang() === 'en' ? 'Launch the website' : 'Lancer le site' }}
+        </tyro-ui-button>
+      </span>
+    </tyro-ui-page-header>
+  } @else {
+    <tyro-ui-page-header [label]="lang() === 'en' ? 'Websites' : 'Sites web'" [title]="lang() === 'en' ? 'Add a website' : 'Ajouter un site'">
+      {{ lang() === 'en' ? 'Register a website or domain name.' : 'Enregistrer un site web ou un nom de domaine.' }}
+    </tyro-ui-page-header>
+  }
+
+  <div class="wf-page">
+
+    @if (site(); as s) {
+      @if (s.daysUntilExpiry !== null && s.daysUntilExpiry <= 30) {
+        <tyro-ui-alert [type]="s.daysUntilExpiry < 0 ? 'danger' : 'warning'" [closable]="false"
+          [title]="s.daysUntilExpiry < 0 ? (lang() === 'en' ? 'Domain expired' : 'Domaine expiré') : (lang() === 'en' ? 'Domain to renew' : 'Domaine à renouveler')"
+          [message]="s.autoRenew
+            ? (lang() === 'en' ? 'Auto-renew is enabled: check that it went through at the registrar.' : 'Le renouvellement auto est activé : vérifiez qu\'il est bien passé chez le registrar.')
+            : (lang() === 'en' ? 'Auto-renew is disabled: renew it at the registrar.' : 'Le renouvellement auto est désactivé : renouvelez-le chez le registrar.')">
+        </tyro-ui-alert>
+      }
+    }
+
+    @if (site(); as s) {
+      @if (s.sslDaysUntilExpiry !== null && s.sslDaysUntilExpiry <= 30) {
+        <tyro-ui-alert [type]="s.sslDaysUntilExpiry < 0 ? 'danger' : 'warning'" [closable]="false"
+          [title]="s.sslDaysUntilExpiry < 0 ? (lang() === 'en' ? 'SSL certificate expired' : 'Certificat SSL expiré') : (lang() === 'en' ? 'SSL certificate to renew' : 'Certificat SSL à renouveler')"
+          [message]="s.sslAutoRenew
+            ? (lang() === 'en' ? 'SSL auto-renew is enabled: check that it went through.' : 'Le renouvellement auto du SSL est activé : vérifiez qu\'il est bien passé.')
+            : (lang() === 'en' ? 'SSL auto-renew is disabled: renew the certificate.' : 'Le renouvellement auto du SSL est désactivé : renouvelez le certificat.')">
+        </tyro-ui-alert>
+      }
+    }
+
+    @if (readOnly()) {
+      <tyro-ui-alert type="info" [closable]="false"
+        [message]="lang() === 'en' ? 'Read only: you do not have the permission to edit websites.' : 'Lecture seule : vous n\'avez pas la permission de modifier les sites.'">
+      </tyro-ui-alert>
+    }
+
+    <form class="wf-form" (submit)="save($event)">
+      <div class="wf-grid">
+
+        <!-- ── Site ─────────────────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-global-line" [label]="lang() === 'en' ? 'Website' : 'Site'" [title]="lang() === 'en' ? 'Domain & site' : 'Domaine et site'">
+          <div class="wf-fields">
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Domain name' : 'Nom de domaine'"
+              placeholder="exemple.fr"
+              [value]="form.domainName"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.domainName = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Website name' : 'Nom du site'"
+              [value]="form.name"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.name = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Description (optional)' : 'Description (facultative)'"
+              [value]="form.description"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.description = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Git repository (optional)' : 'Dépôt git (facultatif)'"
+              placeholder="https://github.com/… · git@github.com:…"
+              [value]="form.gitRepository"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.gitRepository = $event">
+            </tyro-ui-text-field>
+            @if (site()?.gitRepository) {
+              <app-git-link [url]="site()!.gitRepository"></app-git-link>
+            }
+            <div class="wf-field">
+              <span class="wf-label">{{ lang() === 'en' ? 'Hosting server' : 'Serveur d\'hébergement' }}</span>
+              @if (service.canViewServers()) {
+                <tyro-ui-select [items]="serverItems()" [value]="form.serverId" [disabled]="readOnly() || saving()" (valueChange)="form.serverId = $event"></tyro-ui-select>
+              } @else {
+                <app-server-link [server]="site()?.server ?? null"></app-server-link>
+              }
+            </div>
+            <div class="wf-field">
+              <span class="wf-label">{{ lang() === 'en' ? 'Status' : 'Statut' }}</span>
+              <tyro-ui-select [items]="statusItems()" [value]="form.status" [disabled]="readOnly() || saving()" (valueChange)="form.status = $any($event)"></tyro-ui-select>
+            </div>
+          </div>
+        </tyro-ui-bento-card>
+
+        <!-- ── Propriétaire ─────────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-user-star-line" [label]="lang() === 'en' ? 'Owner' : 'Propriétaire'" [title]="lang() === 'en' ? 'Subsidiary or client' : 'Filiale ou client'">
+          <div class="wf-fields">
+            @if (!readOnly()) {
+              <tyro-ui-button-group size="sm" [items]="ownerItems()" [value]="form.ownerType" (valueChange)="form.ownerType = $any($event)"></tyro-ui-button-group>
+            }
+
+            @if (form.ownerType === 'filiale') {
+              <div class="wf-field">
+                <span class="wf-label">{{ lang() === 'en' ? 'Subsidiary' : 'Filiale' }}</span>
+                <tyro-ui-select [items]="filialeItems" [value]="form.filiale"
+                  [placeholder]="lang() === 'en' ? 'Choose the subsidiary' : 'Choisir la filiale'"
+                  [disabled]="readOnly() || saving()" (valueChange)="form.filiale = $event"></tyro-ui-select>
+              </div>
+            } @else {
+              <p class="wf-hint">{{ lang() === 'en' ? 'At least one of the three links below.' : 'Au moins un des trois liens ci-dessous.' }}</p>
+              @if (service.canPickPrestation()) {
+                <div class="wf-field">
+                  <span class="wf-label">{{ lang() === 'en' ? 'Linked service' : 'Prestation liée' }}</span>
+                  <tyro-ui-select [items]="prestationItems()" [value]="form.prestationId" [disabled]="readOnly() || saving()" (valueChange)="form.prestationId = $event"></tyro-ui-select>
+                </div>
+              }
+              @if (service.canPickUser()) {
+                <div class="wf-field">
+                  <span class="wf-label">{{ lang() === 'en' ? 'Client Useritium account' : 'Compte Useritium du client' }}</span>
+                  <tyro-ui-select [items]="accountItems()" [value]="form.userId" [disabled]="readOnly() || saving()" (valueChange)="form.userId = $event"></tyro-ui-select>
+                </div>
+              } @else if (site()?.user) {
+                <div class="wf-field">
+                  <span class="wf-label">{{ lang() === 'en' ? 'Client Useritium account' : 'Compte Useritium du client' }}</span>
+                  <app-hub-user [user]="site()!.user"></app-hub-user>
+                </div>
+              }
+              <tyro-ui-text-field
+                [label]="lang() === 'en' ? 'Client name' : 'Nom du client'"
+                [value]="form.clientName"
+                [disabled]="readOnly() || saving()"
+                (valueChange)="form.clientName = $event">
+              </tyro-ui-text-field>
+            }
+          </div>
+        </tyro-ui-bento-card>
+
+        <!-- ── Domaine ──────────────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-calendar-event-line" [label]="lang() === 'en' ? 'Domain' : 'Domaine'" [title]="lang() === 'en' ? 'Registrar & expiry' : 'Registrar et échéance'">
+          <div class="wf-fields">
+            <tyro-ui-text-field
+              label="Registrar"
+              placeholder="OVH, Gandi…"
+              [value]="form.registrar"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.registrar = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-text-field
+              type="date"
+              [label]="lang() === 'en' ? 'Domain expiry date' : 'Échéance du domaine'"
+              [value]="form.domainExpiresAt"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.domainExpiresAt = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-switch
+              [label]="lang() === 'en' ? 'Domain auto-renew' : 'Renouvellement du domaine'"
+              [value]="form.autoRenew"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.autoRenew = $event">
+            </tyro-ui-switch>
+            @if (site(); as s) {
+              <app-domain-expiry [site]="s"></app-domain-expiry>
+            }
+          </div>
+        </tyro-ui-bento-card>
+
+        <!-- ── Certificat SSL ───────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-lock-line" label="SSL" [title]="lang() === 'en' ? 'SSL certificate' : 'Certificat SSL'">
+          <div class="wf-fields">
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Issuer' : 'Émetteur'"
+              placeholder="Let's Encrypt, Sectigo…"
+              [value]="form.sslProvider"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.sslProvider = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-text-field
+              type="date"
+              [label]="lang() === 'en' ? 'Certificate expiry date' : 'Échéance du certificat'"
+              [value]="form.sslExpiresAt"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.sslExpiresAt = $event">
+            </tyro-ui-text-field>
+            <tyro-ui-switch
+              [label]="lang() === 'en' ? 'SSL auto-renew' : 'Renouvellement du SSL'"
+              [value]="form.sslAutoRenew"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.sslAutoRenew = $event">
+            </tyro-ui-switch>
+            @if (site(); as s) {
+              <app-domain-expiry [site]="s" kind="ssl"></app-domain-expiry>
+            }
+          </div>
+        </tyro-ui-bento-card>
+
+      </div>
+
+      @if (formError(); as error) {
+        <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+      }
+
+      @if (!readOnly()) {
+        <div class="wf-actions">
+          @if (isNew()) {
+            <tyro-ui-button variant="ghost" [disabled]="saving()" (clicked)="back()">{{ lang() === 'en' ? 'Cancel' : 'Annuler' }}</tyro-ui-button>
+          }
+          <tyro-ui-button type="submit" variant="gradient" icon="ri-check-line" [disabled]="saving()">
+            {{ saving()
+              ? (lang() === 'en' ? 'Saving…' : 'Enregistrement…')
+              : (isNew() ? (lang() === 'en' ? 'Add website' : 'Ajouter le site') : (lang() === 'en' ? 'Save' : 'Enregistrer')) }}
+          </tyro-ui-button>
+        </div>
+      }
+    </form>
+
+    @if (site(); as s) {
+      <tyro-ui-bento-card icon="ri-information-line" [label]="lang() === 'en' ? 'History' : 'Historique'" title="Informations">
+        <dl class="wf-meta">
+          <dt>{{ lang() === 'en' ? 'Added' : 'Ajouté le' }}</dt>
+          <dd>{{ date(s.createdAt) }}</dd>
+          <dt>{{ lang() === 'en' ? 'By' : 'Par' }}</dt>
+          <dd><app-hub-user [user]="s.createdBy"></app-hub-user></dd>
+        </dl>
+        @if (service.can('delete')) {
+          <div class="wf-danger">
+            <tyro-ui-button variant="ghost" icon="ri-delete-bin-line" (clicked)="remove()">
+              {{ lang() === 'en' ? 'Delete website' : 'Supprimer le site' }}
+            </tyro-ui-button>
+          </div>
+        }
+      </tyro-ui-bento-card>
+    }
+
+  </div>
+}

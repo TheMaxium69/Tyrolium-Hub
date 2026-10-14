@@ -1,0 +1,73 @@
+.wf-back { margin-bottom: 0.75rem; }
+
+.wf-header-meta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.wf-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.wf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.wf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.wf-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.wf-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.wf-label {
+  font-size: 0.85rem;
+  color: var(--dash-text-2);
+}
+
+.wf-hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--dash-text-muted);
+}
+
+.wf-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.wf-meta {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.wf-meta dt { color: var(--dash-text-2); }
+.wf-meta dd { margin: 0; color: var(--dash-text); font-weight: 600; }
+
+.wf-danger {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--dash-border);
+}

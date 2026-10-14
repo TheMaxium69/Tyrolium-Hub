@@ -43,6 +43,8 @@ export interface IPrestation {
   endedAt:     string | null;
   createdAt:   string;
   createdBy:   IHubUser | null;
+  /** https://…, ssh://… ou git@hote:chemin. */
+  gitRepository: string | null;
 }
 
 export interface IPrestationPayload {
@@ -55,6 +57,8 @@ export interface IPrestationPayload {
   progress?:    number;
   price?:       number | null;
   status?:      PrestationStatus;
+  /** null efface le lien. */
+  gitRepository?: string | null;
 }
 
 export const PRESTATION_STATUSES: PrestationStatus[] = ['pending', 'active', 'suspended', 'terminated'];

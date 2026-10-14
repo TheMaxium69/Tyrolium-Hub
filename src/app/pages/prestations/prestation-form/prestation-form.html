@@ -167,6 +167,17 @@
               (valueChange)="form.content = $event">
             </tyro-ui-text-field>
 
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Git repository (optional)' : 'Dépôt git (facultatif)'"
+              placeholder="https://github.com/… · git@github.com:…"
+              [value]="form.gitRepository"
+              [disabled]="readOnly() || saving()"
+              (valueChange)="form.gitRepository = $event">
+            </tyro-ui-text-field>
+            @if (prestation()?.gitRepository) {
+              <app-git-link [url]="prestation()!.gitRepository"></app-git-link>
+            }
+
           </div>
         </tyro-ui-bento-card>
 

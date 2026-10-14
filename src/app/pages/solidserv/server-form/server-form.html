@@ -1,0 +1,180 @@
+<div class="sf-back">
+  <tyro-ui-button size="sm" variant="ghost" icon="ri-arrow-left-line" (clicked)="back()">Dashboard</tyro-ui-button>
+</div>
+
+@if (notFound()) {
+  <tyro-ui-alert type="warning" [closable]="false"
+    [title]="lang() === 'en' ? 'Server not found' : 'Serveur introuvable'"
+    [message]="lang() === 'en' ? 'This server does not exist or has been deleted.' : 'Ce serveur n\'existe pas ou a été supprimé.'">
+  </tyro-ui-alert>
+} @else if (loadError()) {
+  <tyro-ui-alert type="danger" [closable]="false"
+    [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+    [message]="lang() === 'en' ? 'Unable to load data from Tyrolium API.' : 'Impossible de charger les données depuis l\'API Tyrolium.'">
+  </tyro-ui-alert>
+} @else if (loading()) {
+  <tyro-ui-skeleton width="320px" height="48px"></tyro-ui-skeleton>
+  <div class="sf-page"><tyro-ui-skeleton height="220px" [count]="2"></tyro-ui-skeleton></div>
+} @else {
+
+  @if (server(); as s) {
+    <tyro-ui-page-header [label]="s.type.name + (s.hostname ? ' · ' + s.hostname : '')" [title]="s.name">
+      <span class="sf-header-meta">
+        <app-server-status [status]="s.status"></app-server-status>
+        @if (s.alias) { <span>{{ s.alias }}</span> }
+      </span>
+    </tyro-ui-page-header>
+  } @else {
+    <tyro-ui-page-header label="SolidServ" [title]="lang() === 'en' ? 'New server' : 'Nouveau serveur'">
+      {{ lang() === 'en' ? 'Add a server to the fleet.' : 'Ajouter un serveur au parc.' }}
+    </tyro-ui-page-header>
+  }
+
+  <div class="sf-page">
+
+    @if (readOnly()) {
+      <tyro-ui-alert type="info" [closable]="false"
+        [message]="lang() === 'en' ? 'Read only: you do not have the permission to edit servers.' : 'Lecture seule : vous n\'avez pas la permission de modifier les serveurs.'">
+      </tyro-ui-alert>
+    }
+
+    <form class="sf-form" (submit)="save($event)">
+      <div class="sf-grid">
+
+        <!-- ── Identité ─────────────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-server-line" [label]="lang() === 'en' ? 'Server' : 'Serveur'" [title]="lang() === 'en' ? 'Identity' : 'Identité'">
+          <div class="sf-fields">
+            <div class="sf-field">
+              <span class="sf-label">{{ lang() === 'en' ? 'Type' : 'Type' }}</span>
+              <tyro-ui-select [items]="typeItems()" [value]="form.typeId"
+                [placeholder]="lang() === 'en' ? 'Choose a type' : 'Choisir un type'"
+                [disabled]="readOnly() || saving()" (valueChange)="onTypeChange($event)"></tyro-ui-select>
+            </div>
+            <tyro-ui-text-field
+              [label]="lang() === 'en' ? 'Name' : 'Nom'"
+              [placeholder]="type() ? type()!.namePrefix + '201' : 'vps201'"
+              [value]="form.name"
+              [disabled]="readOnly() || saving() || !type()"
+              (valueChange)="form.name = $event">
+            </tyro-ui-text-field>
+            @if (type(); as t) {
+              <span class="sf-hint">
+                {{ lang() === 'en' ? 'Strict naming:' : 'Nommage strict :' }} <code>{{ t.namePrefix }}</code> {{ lang() === 'en' ? '+ number, lowercase.' : '+ numéro, en minuscules.' }}
+              </span>
+            }
+            <tyro-ui-text-field [label]="lang() === 'en' ? 'Alias (optional)' : 'Alias (facultatif)'" [value]="form.alias" [disabled]="readOnly() || saving()" (valueChange)="form.alias = $event"></tyro-ui-text-field>
+            <tyro-ui-text-field [label]="lang() === 'en' ? 'Description (optional)' : 'Description (facultative)'" [value]="form.description" [disabled]="readOnly() || saving()" (valueChange)="form.description = $event"></tyro-ui-text-field>
+          </div>
+        </tyro-ui-bento-card>
+
+        <!-- ── Exploitation ─────────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-settings-3-line" [label]="lang() === 'en' ? 'Operations' : 'Exploitation'" [title]="lang() === 'en' ? 'Status & location' : 'Statut et emplacement'">
+          <div class="sf-fields">
+            <div class="sf-field">
+              <span class="sf-label">{{ lang() === 'en' ? 'Status' : 'Statut' }}</span>
+              <tyro-ui-select [items]="statusItems()" [value]="form.status" [disabled]="readOnly() || saving()" (valueChange)="form.status = $any($event)"></tyro-ui-select>
+            </div>
+            <tyro-ui-text-field label="Hostname" placeholder="vps201.tyrolium.fr" [value]="form.hostname" [disabled]="readOnly() || saving()" (valueChange)="form.hostname = $event"></tyro-ui-text-field>
+            <tyro-ui-text-field [label]="lang() === 'en' ? 'Location / data center' : 'Lieu / data center'" placeholder="Gravelines - France" [value]="form.location" [disabled]="readOnly() || saving()" (valueChange)="form.location = $event"></tyro-ui-text-field>
+            <tyro-ui-text-field [label]="lang() === 'en' ? 'Project served' : 'Projet servi'" placeholder="TyroServ" [value]="form.project" [disabled]="readOnly() || saving()" (valueChange)="form.project = $event"></tyro-ui-text-field>
+            <tyro-ui-text-field type="date" [label]="lang() === 'en' ? 'In service since' : 'En service depuis'" [value]="form.startedAt" [disabled]="readOnly() || saving()" (valueChange)="form.startedAt = $event"></tyro-ui-text-field>
+          </div>
+        </tyro-ui-bento-card>
+
+        <!-- ── Client ───────────────────────────────────── -->
+        <tyro-ui-bento-card icon="ri-user-star-line" [label]="lang() === 'en' ? 'Owner' : 'Propriétaire'" [title]="lang() === 'en' ? 'Internal or client' : 'Interne ou client'">
+          <div class="sf-fields">
+            @if (!readOnly()) {
+              <tyro-ui-button-group size="sm" [items]="ownerItems()" [value]="form.owner" (valueChange)="form.owner = $any($event)"></tyro-ui-button-group>
+            }
+            @if (form.owner === 'internal') {
+              <p class="sf-hint">{{ lang() === 'en' ? 'Internal server: no product, no client.' : 'Serveur interne : ni produit, ni client.' }}</p>
+            } @else {
+              @if (service.canPickProduct()) {
+                <div class="sf-field">
+                  <span class="sf-label">{{ lang() === 'en' ? 'SolidServ product' : 'Produit SolidServ' }}</span>
+                  <tyro-ui-select [items]="productItems()" [value]="form.productId" [disabled]="readOnly() || saving()" (valueChange)="form.productId = $event"></tyro-ui-select>
+                </div>
+              }
+              @if (service.canPickUser()) {
+                <div class="sf-field">
+                  <span class="sf-label">{{ lang() === 'en' ? 'Client Useritium account' : 'Compte Useritium du client' }}</span>
+                  <tyro-ui-select [items]="accountItems()" [value]="form.userId" [disabled]="readOnly() || saving()" (valueChange)="form.userId = $event"></tyro-ui-select>
+                </div>
+              } @else if (server()?.user) {
+                <div class="sf-field">
+                  <span class="sf-label">{{ lang() === 'en' ? 'Client Useritium account' : 'Compte Useritium du client' }}</span>
+                  <app-hub-user [user]="server()!.user"></app-hub-user>
+                </div>
+              }
+              <tyro-ui-text-field [label]="lang() === 'en' ? 'Client name' : 'Nom du client'" [value]="form.clientName" [disabled]="readOnly() || saving()" (valueChange)="form.clientName = $event"></tyro-ui-text-field>
+            }
+          </div>
+        </tyro-ui-bento-card>
+
+      </div>
+
+      @if (formError(); as error) {
+        <tyro-ui-alert type="danger" [closable]="false" [message]="error"></tyro-ui-alert>
+      }
+
+      @if (!readOnly()) {
+        <div class="sf-actions">
+          @if (isNew()) {
+            <tyro-ui-button variant="ghost" [disabled]="saving()" (clicked)="back()">{{ lang() === 'en' ? 'Cancel' : 'Annuler' }}</tyro-ui-button>
+          }
+          <tyro-ui-button type="submit" variant="gradient" icon="ri-check-line" [disabled]="saving()">
+            {{ saving()
+              ? (lang() === 'en' ? 'Saving…' : 'Enregistrement…')
+              : (isNew() ? (lang() === 'en' ? 'Create server' : 'Créer le serveur') : (lang() === 'en' ? 'Save' : 'Enregistrer')) }}
+          </tyro-ui-button>
+        </div>
+      }
+    </form>
+
+    @if (server() && sites() !== null) {
+      <tyro-ui-bento-card icon="ri-global-line" [label]="lang() === 'en' ? 'Websites' : 'Sites web'" [title]="lang() === 'en' ? 'Hosted websites' : 'Sites hébergés'">
+        @if (!sites()!.length) {
+          <p class="sf-hint">{{ lang() === 'en' ? 'No website is linked to this server.' : 'Aucun site n\'est rattaché à ce serveur.' }}</p>
+        } @else {
+          <ul class="sf-sites">
+            @for (site of sites()!; track site.id) {
+              <li class="sf-site">
+                <div class="sf-site-main">
+                  <strong>{{ site.domainName }}</strong>
+                  <span class="sf-hint">{{ site.name }}</span>
+                </div>
+                <app-web-site-status [status]="site.status"></app-web-site-status>
+                <tyro-ui-button size="sm" variant="ghost" icon="ri-external-link-line"
+                  [title]="(lang() === 'en' ? 'Launch ' : 'Lancer ') + site.domainName"
+                  (clicked)="webSites.launch(site)"></tyro-ui-button>
+                <tyro-ui-button size="sm" variant="lite" iconRight="ri-arrow-right-line" (clicked)="openSite(site.id)">
+                  {{ lang() === 'en' ? 'Open' : 'Voir' }}
+                </tyro-ui-button>
+              </li>
+            }
+          </ul>
+        }
+      </tyro-ui-bento-card>
+    }
+
+    @if (server(); as s) {
+      <tyro-ui-bento-card icon="ri-information-line" [label]="lang() === 'en' ? 'History' : 'Historique'" title="Informations">
+        <dl class="sf-meta">
+          <dt>{{ lang() === 'en' ? 'Added' : 'Ajouté le' }}</dt>
+          <dd>{{ date(s.createdAt) }}</dd>
+          <dt>{{ lang() === 'en' ? 'By' : 'Par' }}</dt>
+          <dd><app-hub-user [user]="s.createdBy"></app-hub-user></dd>
+        </dl>
+        @if (service.canServer('delete')) {
+          <div class="sf-danger">
+            <tyro-ui-button variant="ghost" icon="ri-delete-bin-line" (clicked)="remove()">
+              {{ lang() === 'en' ? 'Delete server' : 'Supprimer le serveur' }}
+            </tyro-ui-button>
+          </div>
+        }
+      </tyro-ui-bento-card>
+    }
+
+  </div>
+}

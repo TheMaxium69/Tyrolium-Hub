@@ -1,0 +1,130 @@
+<tyro-ui-page-header label="Tyrolium" [title]="lang() === 'en' ? 'Websites' : 'Sites web'">
+  {{ lang() === 'en'
+    ? 'Registry of the websites and domain names of the subsidiaries and clients.'
+    : 'Registre des sites web et noms de domaine des filiales et des clients.' }}
+</tyro-ui-page-header>
+
+<div class="wl-page">
+
+  @if (loadError()) {
+    <tyro-ui-alert type="danger" [closable]="false"
+      [title]="lang() === 'en' ? 'Loading failed' : 'Chargement impossible'"
+      [message]="lang() === 'en' ? 'Unable to load websites from Tyrolium API.' : 'Impossible de charger les sites depuis l\'API Tyrolium.'">
+    </tyro-ui-alert>
+  }
+
+  <!-- ── À renouveler : domaines et certificats SSL ───── -->
+  @if (expiring().length || expiringSsl().length) {
+    <div class="wl-renew">
+      @for (block of [
+        { kind: 'domain', list: expiring(), icon: 'ri-alarm-warning-line', title: lang() === 'en' ? 'Domains to renew' : 'Domaines à renouveler' },
+        { kind: 'ssl', list: expiringSsl(), icon: 'ri-lock-unlock-line', title: lang() === 'en' ? 'SSL to renew' : 'SSL à renouveler' }
+      ]; track block.kind) {
+        @if (block.list.length) {
+          <tyro-ui-bento-card [icon]="block.icon" [label]="lang() === 'en' ? 'Within 30 days or expired' : 'Sous 30 jours ou expirés'" [title]="block.title">
+            <ul class="wl-expiring">
+              @for (site of block.list; track site.id) {
+                <li class="wl-expiring-row">
+                  <div class="wl-expiring-main">
+                    <strong>{{ site.domainName }}</strong>
+                    <span class="wl-muted">
+                      {{ site.name }}
+                      @if (block.kind === 'domain' && site.registrar) { · {{ site.registrar }} }
+                      @if (block.kind === 'ssl' && site.sslProvider) { · {{ site.sslProvider }} }
+                    </span>
+                  </div>
+                  <app-domain-expiry [site]="site" [kind]="$any(block.kind)"></app-domain-expiry>
+                  <tyro-ui-button size="sm" variant="ghost" icon="ri-external-link-line"
+                    [title]="(lang() === 'en' ? 'Launch ' : 'Lancer ') + site.domainName"
+                    (clicked)="service.launch(site)"></tyro-ui-button>
+                  <tyro-ui-button size="sm" variant="lite" iconRight="ri-arrow-right-line" (clicked)="open(site.id)">
+                    {{ lang() === 'en' ? 'Open' : 'Voir' }}
+                  </tyro-ui-button>
+                </li>
+              }
+            </ul>
+          </tyro-ui-bento-card>
+        }
+      }
+    </div>
+  }
+
+  <div class="wl-stats">
+    <tyro-ui-bento-card size="small" icon="ri-global-line" [label]="lang() === 'en' ? 'Websites' : 'Sites'">
+      @if (loading()) { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> } @else { <span class="wl-value">{{ counts().total }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-checkbox-circle-line" [label]="lang() === 'en' ? 'Active' : 'Actifs'">
+      @if (loading()) { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> } @else { <span class="wl-value">{{ counts().active }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-building-line" [label]="lang() === 'en' ? 'Subsidiaries' : 'Filiales'">
+      @if (loading()) { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> } @else { <span class="wl-value">{{ counts().filiale }}</span> }
+    </tyro-ui-bento-card>
+    <tyro-ui-bento-card size="small" icon="ri-user-star-line" label="Clients">
+      @if (loading()) { <tyro-ui-skeleton width="60px" height="28px"></tyro-ui-skeleton> } @else { <span class="wl-value">{{ counts().client }}</span> }
+    </tyro-ui-bento-card>
+  </div>
+
+  <!-- ── Registre ───────────────────────────────────────── -->
+  <tyro-ui-bento-card icon="ri-global-line" label="Tyrolium" [title]="lang() === 'en' ? 'Registry' : 'Registre'">
+
+    @if (service.can('create')) {
+      <div tyro-header-action>
+        <tyro-ui-button size="sm" icon="ri-add-line" (clicked)="open('nouveau')">
+          {{ lang() === 'en' ? 'Add a website' : 'Ajouter un site' }}
+        </tyro-ui-button>
+      </div>
+    }
+
+    <div class="wl-filters">
+      <tyro-ui-button-group size="sm" [items]="ownerItems()" [value]="ownerFilter()" (valueChange)="ownerFilter.set($any($event))"></tyro-ui-button-group>
+      <tyro-ui-select class="wl-status-filter" [items]="statusItems()" [value]="statusFilter()" (valueChange)="statusFilter.set($event)"></tyro-ui-select>
+    </div>
+
+    @if (loading()) {
+      <tyro-ui-skeleton height="44px" [count]="5"></tyro-ui-skeleton>
+    } @else if (!rows().length) {
+      <p class="wl-empty">{{ lang() === 'en' ? 'No website.' : 'Aucun site.' }}</p>
+    } @else {
+      <tyro-ui-data-table [columns]="columns" [data]="rows()" [searchable]="true" [paginated]="true" [pageSize]="20">
+
+        <ng-template tyroCol="domain" let-row>
+          <strong class="wl-domain">{{ $any(row).site.domainName }}</strong>
+          <span class="wl-muted">{{ $any(row).site.name }}</span>
+        </ng-template>
+
+        <ng-template tyroCol="owner" let-row>
+          <app-web-site-owner [site]="$any(row).site" [showPrestation]="false"></app-web-site-owner>
+        </ng-template>
+
+        <ng-template tyroCol="status" let-row>
+          <app-web-site-status [status]="$any(row).site.status"></app-web-site-status>
+        </ng-template>
+
+        <ng-template tyroCol="expiry" let-row>
+          <app-domain-expiry [site]="$any(row).site" [showDate]="false"></app-domain-expiry>
+        </ng-template>
+
+        <ng-template tyroCol="ssl" let-row>
+          <app-domain-expiry [site]="$any(row).site" kind="ssl" [showDate]="false"></app-domain-expiry>
+        </ng-template>
+
+        <ng-template tyroCol="server" let-row>
+          <app-server-link [server]="$any(row).site.server" [details]="false"></app-server-link>
+        </ng-template>
+
+        <ng-template tyroCol="actions" let-row>
+          <span class="wl-row-actions">
+            <tyro-ui-button size="sm" variant="ghost" icon="ri-external-link-line"
+              [title]="(lang() === 'en' ? 'Launch ' : 'Lancer ') + $any(row).site.domainName"
+              (clicked)="service.launch($any(row).site)"></tyro-ui-button>
+            <tyro-ui-button size="sm" variant="lite" iconRight="ri-arrow-right-line" (clicked)="open($any(row).id)">
+              {{ lang() === 'en' ? 'Open' : 'Voir' }}
+            </tyro-ui-button>
+          </span>
+        </ng-template>
+
+      </tyro-ui-data-table>
+    }
+  </tyro-ui-bento-card>
+
+</div>

@@ -6,6 +6,7 @@ import {
   TyroUiConfirmService, TyroUiLangService, TyroUiPageHeader, TyroUiProgressBar, TyroUiSelect, TyroUiSkeleton,
   TyroUiSnackbarService, TyroUiTextField,
 } from 'tyrolium-ui';
+import { GitLink } from '../../../components/git-link/git-link';
 import { HubUser, hubUserName } from '../../../components/hub-user/hub-user';
 import { PrestationClient } from '../../../components/prestation-client/prestation-client';
 import {
@@ -16,7 +17,7 @@ import {
   IOffre, IPrestation, IPrestationPayload, PRESTATION_STATUSES, PrestationService, PrestationStatus,
 } from '../../../services/prestation.service';
 import { IUseritiumUser, UseritiumAdminService } from '../../../services/useritium-admin.service';
-import { formatDateTime, formatPrice, parsePrice, priceInput } from '../../../utils/format';
+import { formatDateTime, formatPrice, isGitRepository, parsePrice, priceInput } from '../../../utils/format';
 
 type ClientMode = 'account' | 'guest';
 
@@ -31,6 +32,7 @@ interface IPrestationForm {
   progress:    string;
   price:       string;
   content:     string;
+  gitRepository: string;
 }
 
 /** Création (/prestations/nouvelle) et fiche/modification (/prestations/:id) d'une prestation. */
@@ -38,7 +40,7 @@ interface IPrestationForm {
   selector: 'app-prestation-form',
   imports: [
     TyroUiPageHeader, TyroUiBentoCard, TyroUiButton, TyroUiButtonGroup, TyroUiTextField, TyroUiSelect,
-    TyroUiProgressBar, TyroUiAlert, TyroUiSkeleton, HubUser, PrestationClient, PrestationStatusChip,
+    TyroUiProgressBar, TyroUiAlert, TyroUiSkeleton, HubUser, GitLink, PrestationClient, PrestationStatusChip,
   ],
   templateUrl: './prestation-form.html',
   styleUrl: './prestation-form.css',
@@ -224,7 +226,7 @@ export class PrestationForm {
   private emptyForm(): IPrestationForm {
     return {
       offreId: '', clientMode: this.service.canPickUser() ? 'account' : 'guest', userId: '',
-      clientName: '', clientEmail: '', status: 'pending', progress: '0', price: '', content: '',
+      clientName: '', clientEmail: '', status: 'pending', progress: '0', price: '', content: '', gitRepository: '',
     };
   }
 
@@ -240,6 +242,7 @@ export class PrestationForm {
       progress:    String(p.progress),
       price:       priceInput(p.price),
       content:     p.content ?? '',
+      gitRepository: p.gitRepository ?? '',
     };
   }
 
@@ -256,6 +259,10 @@ export class PrestationForm {
       return en ? 'Progress must be a whole number between 0 and 100.' : 'L\'avancement doit être un entier entre 0 et 100.';
     }
     if (Number.isNaN(price)) return en ? 'Invalid price.' : 'Prix invalide.';
+    const gitRepository = f.gitRepository.trim() || null;
+    if (gitRepository && !isGitRepository(gitRepository)) {
+      return en ? 'Git repository: https://…, ssh://… or git@host:path.' : 'Dépôt git : https://…, ssh://… ou git@hote:chemin.';
+    }
 
     const payload: IPrestationPayload = {
       offreId: Number(f.offreId),
@@ -263,6 +270,7 @@ export class PrestationForm {
       progress,
       price,
       content: f.content.trim() || null,
+      gitRepository,
     };
 
     if (f.clientMode === 'account') {

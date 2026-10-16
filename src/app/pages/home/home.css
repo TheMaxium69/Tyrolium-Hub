@@ -1,3 +1,318 @@
-.hub-home {
-  padding: 2rem;
+.hh {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ─── Bienvenue ─────────────────────────────────────────── */
+
+.hh-hero {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.75rem 2rem;
+  border-radius: 16px;
+  background: var(--dash-card-bg);
+  box-shadow: var(--shadow-card);
+}
+
+/* Halo discret aux couleurs Tyrolium (bleu → rouge). */
+.hh-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(4, 0, 212, 0.10), transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba(204, 0, 0, 0.08), transparent 45%);
+  pointer-events: none;
+}
+
+.hh-hero-main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.hh-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.hh-date {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dash-text-2);
+}
+
+.hh-title {
+  margin: 0;
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--dash-text);
+}
+
+.hh-name {
+  background: linear-gradient(135deg, #0400d4, #cc0000);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:host-context([data-theme="dark"]) .hh-name {
+  background: linear-gradient(135deg, #60a5fa, #f87171);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.hh-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hh-hero-logo {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+/* ─── Sections ──────────────────────────────────────────── */
+
+.hh-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hh-section-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Syne', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--dash-text);
+}
+
+.hh-section-title i { color: var(--dash-accent); }
+:host-context([data-theme="dark"]) .hh-section-title i { color: #60a5fa; }
+
+.hh-muted {
+  font-size: 0.85rem;
+  color: var(--dash-text-2);
+}
+
+/* ─── À surveiller ──────────────────────────────────────── */
+
+.hh-attention {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.hh-alert {
+  --hh-tone: var(--dash-orange);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.1rem;
+  border-radius: 14px;
+  background: var(--dash-card-bg);
+  box-shadow: var(--shadow-card-sm);
+  border-left: 3px solid var(--hh-tone);
+  color: var(--dash-text);
+  text-decoration: none;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.hh-alert:hover {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+
+.hh-alert--danger  { --hh-tone: var(--dash-red); }
+.hh-alert--warning { --hh-tone: var(--dash-orange); }
+.hh-alert--accent  { --hh-tone: var(--dash-accent-2); }
+
+.hh-alert-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  color: var(--hh-tone);
+  background: color-mix(in srgb, var(--hh-tone) 12%, transparent);
+}
+
+.hh-alert-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.hh-alert-text strong {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.1;
+}
+
+.hh-alert-text span {
+  font-size: 0.82rem;
+  color: var(--dash-text-2);
+}
+
+.hh-alert-arrow {
+  color: var(--dash-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.hh-alert:hover .hh-alert-arrow { transform: translateX(3px); }
+
+.hh-note {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--dash-red);
+}
+
+/* ─── Aperçus ───────────────────────────────────────────── */
+
+.hh-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1.5rem;
+}
+
+.hh-overview--single { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.hh-overview--single .hh-side { display: contents; }
+
+@media (max-width: 1100px) {
+  .hh-overview { grid-template-columns: 1fr; }
+}
+
+.hh-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.hh-traffic {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.hh-kpis {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+}
+
+.hh-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.hh-kpi--wide { min-width: 0; }
+
+.hh-kpi-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.9rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--dash-text);
+}
+
+.hh-kpi-value--sm { font-size: 1.5rem; }
+
+.hh-kpi-top {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.9rem;
+  color: var(--dash-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hh-kpi-label {
+  font-size: 0.78rem;
+  color: var(--dash-text-2);
+}
+
+/* Place au-dessus du graphique pour l'infobulle. */
+.hh-chart { padding-top: 56px; }
+
+.hh-fleet {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hh-fleet-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* ─── Accès rapides ─────────────────────────────────────── */
+
+.hh-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hh-group-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--dash-text-2);
+}
+
+.hh-group-logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.hh-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* ─── Mobile ────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .hh-hero { padding: 1.25rem; }
+  .hh-hero-logo { display: none; }
+  .hh-title { font-size: 1.5rem; }
 }

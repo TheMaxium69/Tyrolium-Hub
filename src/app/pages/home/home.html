@@ -1,3 +1,179 @@
-<div class="hub-home">
-  <h1>Bienvenue sur le Hub Tyrolium</h1>
+<div class="hh">
+
+  <!-- ── Bienvenue ──────────────────────────────────────── -->
+  <section class="hh-hero">
+    <div class="hh-hero-main">
+      <tyro-ui-avatar [src]="avatar()" [name]="name()" size="lg"></tyro-ui-avatar>
+      <div class="hh-hero-text">
+        <span class="hh-date">{{ today() }}</span>
+        <h1 class="hh-title">{{ greeting() }}, <span class="hh-name">{{ name() }}</span></h1>
+        <div class="hh-hero-meta">
+          <app-access-level [level]="level()"></app-access-level>
+          <span class="hh-muted">
+            {{ visible().length }}
+            {{ lang() === 'en' ? (visible().length > 1 ? 'modules available' : 'module available') : (visible().length > 1 ? 'modules accessibles' : 'module accessible') }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <img class="hh-hero-logo" src="assets/tyrolium-ui/projects/Tyrolium.png" alt="">
+  </section>
+
+  <!-- ── À surveiller ───────────────────────────────────── -->
+  @if (hasWatch()) {
+    <section class="hh-section">
+      <h2 class="hh-section-title">
+        <i class="ri-radar-line"></i>
+        {{ lang() === 'en' ? 'To watch' : 'À surveiller' }}
+      </h2>
+
+      @if (loading()) {
+        <div class="hh-attention">
+          <tyro-ui-skeleton height="76px" [count]="1"></tyro-ui-skeleton>
+          <tyro-ui-skeleton height="76px" [count]="1"></tyro-ui-skeleton>
+          <tyro-ui-skeleton height="76px" [count]="1"></tyro-ui-skeleton>
+        </div>
+      } @else if (!attention().length) {
+        <tyro-ui-alert type="success" [closable]="false"
+          [title]="lang() === 'en' ? 'All clear' : 'Rien à signaler'"
+          [message]="lang() === 'en' ? 'No domain, certificate, server, service or product needs attention.' : 'Aucun domaine, certificat, serveur, prestation ou produit ne demande d\'action.'">
+        </tyro-ui-alert>
+      } @else {
+        <div class="hh-attention">
+          @for (item of attention(); track item.key) {
+            <a class="hh-alert" [class]="'hh-alert hh-alert--' + item.variant" [routerLink]="item.link">
+              <span class="hh-alert-icon"><i [class]="item.icon"></i></span>
+              <span class="hh-alert-text">
+                <strong>{{ item.count }}</strong>
+                <span>{{ item.label }}</span>
+              </span>
+              <i class="ri-arrow-right-s-line hh-alert-arrow"></i>
+            </a>
+          }
+        </div>
+        @if (expiredCount()) {
+          <p class="hh-note">
+            <i class="ri-error-warning-line"></i>
+            {{ expiredCount() }}
+            {{ lang() === 'en'
+              ? (expiredCount() > 1 ? 'domains or certificates are already expired.' : 'domain or certificate is already expired.')
+              : (expiredCount() > 1 ? 'domaines ou certificats sont déjà expirés.' : 'domaine ou certificat est déjà expiré.') }}
+          </p>
+        }
+      }
+    </section>
+  }
+
+  <!-- ── Aperçus ────────────────────────────────────────── -->
+  @if (canAnalytics() || canServers() || canPrestations()) {
+    <section class="hh-overview" [class.hh-overview--single]="!canAnalytics()">
+
+      @if (canAnalytics()) {
+        <tyro-ui-bento-card icon="ri-line-chart-line" [label]="lang() === 'en' ? 'Last 7 days' : '7 derniers jours'" [title]="lang() === 'en' ? 'Website traffic' : 'Fréquentation des sites'">
+          <tyro-ui-button tyro-header-action size="sm" variant="lite" iconRight="ri-arrow-right-line" routerLink="/analytics">Analytics</tyro-ui-button>
+          @if (loading()) {
+            <tyro-ui-skeleton height="190px"></tyro-ui-skeleton>
+          } @else {
+            <div class="hh-traffic">
+              <div class="hh-kpis">
+                <div class="hh-kpi">
+                  <span class="hh-kpi-value">{{ traffic()?.summary?.visits ?? 0 }}</span>
+                  <span class="hh-kpi-label">{{ lang() === 'en' ? 'visits' : 'visites' }}</span>
+                </div>
+                <div class="hh-kpi">
+                  <span class="hh-kpi-value">{{ traffic()?.summary?.uniqueVisitors ?? 0 }}</span>
+                  <span class="hh-kpi-label">{{ lang() === 'en' ? 'unique visitors' : 'visiteurs uniques' }}</span>
+                </div>
+                @if (traffic()?.topPages?.[0]; as top) {
+                  <div class="hh-kpi hh-kpi--wide">
+                    <span class="hh-kpi-top">{{ top.pageName }}</span>
+                    <span class="hh-kpi-label">{{ lang() === 'en' ? 'most viewed page' : 'page la plus vue' }}</span>
+                  </div>
+                }
+              </div>
+              <div class="hh-chart">
+                <tyro-ui-bar-chart [items]="trafficChart()" [height]="150" [valueLabel]="lang() === 'en' ? 'visits' : 'visites'"
+                  [emptyLabel]="lang() === 'en' ? 'No visit this week.' : 'Aucune visite cette semaine.'"></tyro-ui-bar-chart>
+              </div>
+            </div>
+          }
+        </tyro-ui-bento-card>
+      }
+
+      @if (canServers() || canPrestations()) {
+        <div class="hh-side">
+          @if (canServers()) {
+            <tyro-ui-bento-card icon="ri-server-line" label="SolidServ" [title]="lang() === 'en' ? 'Server fleet' : 'Parc de serveurs'">
+              <tyro-ui-button tyro-header-action size="sm" variant="lite" iconRight="ri-arrow-right-line" routerLink="/solidserv/dashboard">Dashboard</tyro-ui-button>
+              @if (loading()) {
+                <tyro-ui-skeleton height="60px"></tyro-ui-skeleton>
+              } @else if (serverStats(); as s) {
+                <div class="hh-fleet">
+                  <div class="hh-kpi">
+                    <span class="hh-kpi-value">{{ s.total }}</span>
+                    <span class="hh-kpi-label">{{ lang() === 'en' ? 'servers' : 'serveurs' }}</span>
+                  </div>
+                  <div class="hh-fleet-chips">
+                    <tyro-ui-chip size="sm" variant="success" icon="ri-checkbox-circle-line">{{ s.byStatus.active }} {{ lang() === 'en' ? 'active' : (s.byStatus.active > 1 ? 'actifs' : 'actif') }}</tyro-ui-chip>
+                    <tyro-ui-chip size="sm" icon="ri-user-star-line">{{ s.withClient }} clients</tyro-ui-chip>
+                    <tyro-ui-chip size="sm" icon="ri-building-line">{{ s.internal }} {{ lang() === 'en' ? 'internal' : (s.internal > 1 ? 'internes' : 'interne') }}</tyro-ui-chip>
+                  </div>
+                </div>
+              }
+            </tyro-ui-bento-card>
+          }
+
+          @if (canPrestations()) {
+            <tyro-ui-bento-card icon="ri-briefcase-4-line" label="Tyrolium" title="Prestations">
+              <tyro-ui-button tyro-header-action size="sm" variant="lite" iconRight="ri-arrow-right-line" routerLink="/prestations">{{ lang() === 'en' ? 'Open' : 'Voir' }}</tyro-ui-button>
+              @if (loading()) {
+                <tyro-ui-skeleton height="60px"></tyro-ui-skeleton>
+              } @else {
+                <div class="hh-kpi">
+                  <span class="hh-kpi-value hh-kpi-value--sm">{{ price(activeValue()) }}</span>
+                  <span class="hh-kpi-label">{{ lang() === 'en' ? 'value of active services' : 'valeur des prestations actives' }}</span>
+                </div>
+              }
+            </tyro-ui-bento-card>
+          }
+        </div>
+      }
+    </section>
+  }
+
+  <!-- ── Accès rapides ──────────────────────────────────── -->
+  <section class="hh-section">
+    <h2 class="hh-section-title">
+      <i class="ri-apps-2-line"></i>
+      {{ lang() === 'en' ? 'Quick access' : 'Accès rapides' }}
+    </h2>
+
+    @if (!groups().length) {
+      <tyro-ui-alert type="info" [closable]="false"
+        [title]="lang() === 'en' ? 'No module yet' : 'Aucun module pour l\'instant'"
+        [message]="lang() === 'en' ? 'Ask the owner to grant you permissions to access the Hub modules.' : 'Demandez au owner de vous accorder des permissions pour accéder aux modules du Hub.'">
+      </tyro-ui-alert>
+    }
+
+    @for (group of groups(); track group.label) {
+      <div class="hh-group">
+        <div class="hh-group-head">
+          @if (group.iconImg) { <img [src]="group.iconImg" alt="" class="hh-group-logo"> }
+          <span>{{ group.label }}</span>
+        </div>
+        <div class="hh-grid">
+          @for (section of group.sections; track section.path) {
+            <tyro-ui-button-bento
+              [short]="true"
+              [icon]="section.icon"
+              [label]="label(section)"
+              [sublabel]="hint(section)"
+              [link]="'/' + section.path">
+            </tyro-ui-button-bento>
+          }
+        </div>
+      </div>
+    }
+  </section>
+
 </div>

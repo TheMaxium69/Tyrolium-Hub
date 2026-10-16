@@ -30,7 +30,7 @@ export const HUB_SECTIONS: IHubSection[] = [
   // Réservées au owner (hasRole laisse passer ROLE_OWNER, seul compte à l'avoir).
   { path: 'permissions', label: 'Permissions', labelEn: 'Permissions',   icon: 'ri-shield-keyhole-line',   role: 'ROLE_OWNER',                     group: 'tyrolium',  ready: true  },
   { path: 'cles-api',    label: 'Clés API',    labelEn: 'API keys',      icon: 'ri-key-2-line',            role: 'ROLE_OWNER',                     group: 'tyrolium',  ready: true  },
-  { path: 'websites',    label: 'Websites',    labelEn: 'Websites',      icon: 'ri-global-line',           role: 'PERMS_TYROLIUM_WEBSITE_VIEW',    group: 'tyrolium',  ready: true  },
+  { path: 'websites',    label: 'Sites web',   labelEn: 'Websites',      icon: 'ri-global-line',           role: 'PERMS_TYROLIUM_WEBSITE_VIEW',    group: 'tyrolium',  ready: true  },
   { path: 'utilisateurs', label: 'Utilisateurs', labelEn: 'Users',       icon: 'ri-group-line',            role: 'PERMS_USERITIUM_USER_VIEW',      group: 'useritium', ready: true  },
   { path: 'solidserv/produits',  label: 'Produits',          labelEn: 'Products',     icon: 'ri-shopping-bag-3-line', role: 'PERMS_SOLIDSERV_PRODUCT_VIEW',    group: 'solidserv', ready: true  },
   { path: 'solidserv/dashboard', label: 'Dashboard',         labelEn: 'Dashboard',    icon: 'ri-server-line',         role: 'PERMS_SOLIDSERV_SERVER_VIEW',     group: 'solidserv', ready: true  },
